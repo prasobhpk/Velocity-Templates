@@ -1,0 +1,214 @@
+########################################################################################################
+## RJ - Framework
+########################################################################################################
+## Base of the template framework for the Review-Journal website.
+########################################################################################################
+## Setup template
+########################################################################################################
+## Do not add Setup template if content item, the template will be added in the content type template. 
+##
+#if(!$cms.content)##
+#if($cms.domain == "www.nevadapreps.com")
+$string.trim($cms.template("NP - Setup - framework"))##
+#else
+$string.trim($cms.template("RJ - Setup"))##
+#end
+#end
+##
+#if($setupTemplates && !$setupTemplates.isEmpty())##
+#foreach($setup in $setupTemplates)##
+#if($setup && $setup != "")##
+$string.trim($cms.template($setup))##
+#end
+#end
+#end
+##
+########################################################################################################
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:og="http://ogp.me/ns#" xmlns:fb="http://www.facebook.com/2008/fbml">
+<head>
+#if($cms.domain == "www.nevadapreps.com")
+$string.trim($cms.template("NP - Header"))##
+#else
+$string.trim($cms.template("RJ - Header"))
+#end
+</head>
+<body class="$string.toLowerCase($util.date("EEEE", $curDate, "America/Los_Angeles"))">
+<div id="fb-root"></div>
+#if($cms.domain == "www.nevadapreps.com")
+<script type="text/javascript" src="${cms.include('facebook-sdk-np.js').url}"></script>
+#else
+<script type="text/javascript" src="${cms.include('facebook-sdk.js').url}"></script>
+#end
+$string.trim($cms.template("Tracker"))##
+
+<div id="page"#if($frameworkDevClass)${frameworkDevClass}#end><div id="page-inner">
+
+########################################################################################################
+## #branding-left container
+########################################################################################################
+##
+#if($branding-left && $branding-left != "" && $branding-right && $branding-right != "")##
+	<div id="branding" class="rj-grid-${frameworkCol}"><div id="branding-inner">
+		<div id="branding-left" class="$!{brandingLeftGrid} rj-alpha">
+			$string.trim($cms.template($branding-left))
+		</div> <!-- /#branding-left -->
+	</div></div> <!-- /#branding-inner, /#branding -->
+#end
+##
+########################################################################################################
+	
+	<div id="main" class="rj-grid-${frameworkCol}"><div id="main-inner">
+
+########################################################################################################
+## #main-top container
+########################################################################################################
+##
+#if($main-top && $main-top != "")##
+		<div id="main-top" class="rj-grid-${frameworkCol} rj-alpha rj-omega"><div id="main-top-inner">
+			$string.trim($cms.template($main-top))
+		</div></div> <!-- /#main-top-inner, /#main-top -->
+#end
+##
+########################################################################################################
+
+## #content container width assigned and pushed if there is a left sidebar
+		<div id="content" class="rj-grid-${contentCol}#if($leftSidebarCol) rj-push-${leftSidebarCol}#end rj-alpha"><div id="content-inner">
+
+########################################################################################################
+## #content-top container
+########################################################################################################
+##
+#if($content-top && $content-top != "")##
+			<div id="content-top"><div id="content-top-inner">
+				$string.trim($cms.template($content-top))
+			</div></div> <!-- /#content-top-inner, /#content-top -->
+#end
+##
+########################################################################################################
+## #content-main container
+########################################################################################################
+##
+#if($content-main && $content-main != "")##
+			<div id="content-main"><div id="content-main-inner">
+				$string.trim($cms.template($content-main))
+			</div></div> <!-- /#content-main-inner, /#content-main -->
+#end
+##
+########################################################################################################
+## #content-bottom container
+########################################################################################################
+##
+#if($content-bottom && $content-bottom != "")##
+			<div id="content-bottom"><div id="content-bottom-inner">
+				$string.trim($cms.template($content-bottom))
+			</div></div> <!-- /#content-bottom-inner, /#content-bottom -->
+#end
+##
+########################################################################################################
+
+		</div></div> <!-- /#content-inner, /#content -->
+
+########################################################################################################
+## #sidebar-left container
+########################################################################################################
+##
+#if($leftSidebarCol && $sidebar-left && $sidebar-left != "")##
+		<div id="sidebar-left" class="rj-grid-${leftSidebarCol} rj-pull-${contentCol}"><div id="sidebar-left-inner">
+			$string.trim($cms.template($sidebar-left))
+		</div></div> <!-- /#sidebar-left-inner, /#sidebar-left -->
+#end
+##
+########################################################################################################
+## #sidebar-right container
+########################################################################################################
+##	
+#if($rightSidebarCol && $sidebar-right && $sidebar-right != "")##
+		<div id="sidebar-right" class="rj-grid-${rightSidebarCol} rj-omega"><div id="sidebar-right-inner">
+			$string.trim($cms.template($sidebar-right))
+		</div></div> <!-- /#sidebar-right-inner, /#sidebar-right -->
+#end
+##
+########################################################################################################
+
+	</div></div> <!-- /#main-inner, /#main -->
+
+########################################################################################################
+## #footer container
+########################################################################################################
+##
+#if($footer && $footer != "")##
+	<div id="footer" class="rj-grid-${frameworkCol}"><div id="footer-inner">
+		$string.trim($cms.template($footer))
+	</div></div> <!-- /#footer-inner, /#footer -->
+#end
+##
+########################################################################################################
+## #nav-main container
+########################################################################################################
+##
+#if($nav-main && $nav-main != "")##
+	<div id="nav-main" class="rj-grid-${frameworkCol}"><div id="nav-main-inner">
+		$string.trim($cms.template($nav-main))
+	</div></div> <!-- /#nav-main-inner --><!-- /#nav-main -->
+#end
+##
+########################################################################################################
+## #branding-top container
+########################################################################################################
+##
+#if($branding-top && $branding-top != "")##
+	<div id="branding-top" class="rj-grid-${frameworkCol}">
+		$string.trim($cms.template($branding-top))
+	</div> <!-- /#branding-top -->
+#end
+##
+########################################################################################################
+## #branding-right container
+########################################################################################################
+##
+#if(!$useSmallRJBanner)##
+#set($brandingRightPush = "rj-push-12")##
+#else##
+#set($brandingRightPush = "rj-push-9")##
+#end
+#if($branding-right && $branding-right != "")##
+	<div id="branding-right" class="$!{brandingRightGrid} rj-omega $!{brandingRightPush}">
+		$string.trim($cms.template($branding-right))
+	</div> <!-- /#branding-right -->
+#end
+##
+########################################################################################################
+## #branding-bottom container
+########################################################################################################
+##
+#if($branding-bottom && $branding-bottom != "")##
+	<div id="branding-bottom" class="rj-grid-${frameworkCol}">
+		$string.trim($cms.template($branding-bottom))
+	</div> <!-- /#branding-bottom -->
+#end
+##
+########################################################################################################
+## #positioned-ads
+########################################################################################################
+##
+#if($positioned-ads && $positioned-ads != "")##
+	$string.trim($cms.template($positioned-ads))
+#end
+##
+########################################################################################################
+
+</div></div> <!-- /#page-inner, /#page -->
+
+########################################################################################################
+## Footer scripts template
+########################################################################################################
+##
+#if($footer-scripts && $footer-scripts != "")##
+$string.trim($cms.template($footer-scripts))
+#end
+##
+########################################################################################################
+</body>
+</html>

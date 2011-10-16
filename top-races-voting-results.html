@@ -1,0 +1,199 @@
+#if($util.isNull($domainString))##
+	#set($domainString = "http://${cms.envHost}$cms.domain")##
+#end
+#if($util.isNull($quote))##
+	#set($quote = $util.encode.unHTML("&quot;"))##
+#end
+#set($raceQuery = $util.newHashMap)##
+#set($raceCandidates = $util.newHashMap)##
+#set($candidateImages = $util.newHashMap)##
+########################################################################################################
+## Add the SOS ID for the three races that should be returned in the JSON
+#set($foo = $raceQuery.put("race1","2"))##
+#set($foo = $raceQuery.put("race2","6"))##
+#set($foo = $raceQuery.put("race3","5"))##
+## Add the SOS ID for the two candidates that should be displayed for each race. Use the same key as the $raceQuery HashMap.
+#set($foo = $raceCandidates.put("race1",["56","4244"]))##
+#set($foo = $raceCandidates.put("race2",["4263","4264"]))##
+#set($foo = $raceCandidates.put("race3",["3181","4255"]))##
+## Add the SOS ID for the candidate and the filename of the image that has been uploaded to CMS Images.
+#set($foo = $candidateImages.put("56","harry-reid-70x80.jpg"))##
+#set($foo = $candidateImages.put("4244","sharron-angle-70x80.jpg"))##
+#set($foo = $candidateImages.put("4263","rory-reid-70x60.jpg"))##
+#set($foo = $candidateImages.put("4264","brian-sandoval-70x80.jpg"))##
+#set($foo = $candidateImages.put("3181","dina-titus-70x80.jpg"))##
+#set($foo = $candidateImages.put("4255","joe-heck-70x80.jpg"))##
+########################################################################################################
+#* Old retrieval
+#set($jsonQuery = "")##
+#foreach($raceCount in [1..$raceQuery.keySet.size()])##
+	#set($raceValue = $raceQuery.get("race${raceCount}"))##
+	#if($velocityCount == 1)##
+		#set($querySeparator = "?")##
+	#elseif($raceCount <= $raceQuery.keySet.size())##
+		#set($querySeparator = "&")##
+	#end
+	#set($jsonQuery = "${jsonQuery}${querySeparator}race${raceCount}=${raceValue}")##
+#end
+#if($jsonQuery && $jsonQuery != "")##
+	#set($JSONurl = "http://projects.reviewjournal.com/candidates/results3.json${jsonQuery}")##
+#end
+#set($JSONurlBk = "http://projects.reviewjournal.com/data/results3.json")##
+*#
+#set($jsonVersionClass = "")##
+#set($JSONurl = "http://projects.reviewjournal.com/data/results3.json")##
+#set($strJSON = $util.getURLWithTimeout($JSONurl, 10))##
+#set($jsonVersionClass = " class=${quote}jv1${quote}")##
+#if(!$strJSON || $strJSON == "")##
+	#set($jsonVersionClass = " class=${quote}jv2${quote}")##
+	#set($strJSON = $util.getURLWithTimeout($JSONurlBk, 10))##
+#end
+#set($objJSON = $jsonParser.parseJSON($strJSON))##
+#set($arNames = $objJSON.names())##
+#if($arNames.length() == 1)##
+
+							<ul$!{jsonVersionClass}>
+#### First level of JSON (base field - "race") ####################################################################
+	#set($baseName = $arNames.get(0))##
+	#set($arJSONRaces = $objJSON.get($baseName))##
+	#foreach($raceCount in [1..$raceQuery.keySet.size()])##
+		#set($candidatesKey = "race${raceCount}")##
+		#set($candidatesArray = $raceCandidates.get($candidatesKey))##
+		#if($raceCount == 1)##
+			#set($raceListClass = " class=${quote}first${quote}")##
+		#elseif($raceCount == $raceQuery.keySet.size())##
+			#set($raceListClass = " class=${quote}last${quote}")##
+		#else##
+			#set($raceListClass = "")##
+		#end
+		#foreach($arJSONRacesKey in [0..$math.subtract($arJSONRaces.length(),1)])##
+#### Second level of JSON (array of races) #####################################################################
+			#set($objJSONRace = $arJSONRaces.get($arJSONRacesKey))##
+			#if(!$objJSONRace.isNull("id") && $objJSONRace.get("id") == $raceQuery.get($candidatesKey))##
+				#if(!$objJSONRace.isNull("candidate") && $util.type($objJSONRace.get("candidate")) == "JSONArray")##
+					#set($arJSONCandidates = $objJSONRace.get("candidate"))##
+					#if($arJSONCandidates.length() > 0)##
+						#if(!$objJSONRace.isNull("office-type"))##
+							#set($officeType = $objJSONRace.get("office-type"))##
+						#else
+							#set($officeType = false)##
+						#end
+						#if(!$objJSONRace.isNull("modified"))##
+							#set($dateInput = $util.parseDate($objJSONRace.get("modified"),"E, dd MMM yyyy HH:mm:ss z"))##
+							#set($styleMeridiem = true)##
+							#set($dateFormats = $util.newHashMap)##
+							#set($foo = $dateFormats.put("sameDay","'Updated:' h:mm a"))##
+							#set($foo = $dateFormats.put("default","'Updated:' MMM. d 'at' h:mm a"))##
+							$string.trim($cms.template("Format Date/Time "))##
+							#set($raceModified = $dateOutput)##
+						#else
+							#set($raceModified = false)##
+						#end
+						#if(!$objJSONRace.isNull("id"))##
+							#set($raceID = $objJSONRace.get("id"))##
+							#set($raceIDSelector = " id=${quote}${officeType}-race-${raceID}${quote}")##
+						#else
+							#set($raceID = false)##
+							#set($raceIDSelector = "")##
+						#end
+						#if(!$objJSONRace.isNull("total-precincts-percent"))##
+							#set($racePrecinctsPercent = $objJSONRace.get("total-precincts-percent"))##
+						#else##
+							#set($racePrecinctsPercent = false)##
+						#end
+						#if($officeType && $officeType != "" && !$objJSONRace.isNull("slug"))##
+							#if($officeType == "judicial")##
+								#set($judicialText = "${officeType}-")##
+							#else##
+									#set($judicialText = "")##
+							#end
+							#if($objJSONRace.get("slug") && $objJSONRace.get("slug") != "")##
+								#set($raceSlug = $objJSONRace.get("slug"))##
+							#else##
+								#set($raceSlug = false)##
+							#end
+							#set($raceURL = "${domainString}/politics/candidates/${util.date('yyyy')}/${judicialText}office/${raceSlug}")##
+						#else##
+							#set($raceURL = false)##
+							#set($raceSlug = false)##
+						#end
+					
+								<li${raceIDSelector}${raceListClass}>
+									<h4><a href="${raceURL}">$objJSONRace.get("title")</a></h4>
+									<ul>
+						#foreach($candidateID in $candidatesArray)##
+							#if($velocityCount == 1)##
+								#set($candidateListClass = " class=${quote}first${quote}")##
+							#elseif($velocityCount == $candidatesArray.size())##
+								#set($candidateListClass = " class=${quote}last${quote}")##
+							#else##
+								#set($candidateListClass = "")##
+							#end		
+							#foreach($arJSONCandidatesKey in [0..$math.subtract($arJSONCandidates.length(),1)])##
+#### Third level of JSON (array of candidates) ##################################################################
+								#set($objJSONCandidate = $arJSONCandidates.get($arJSONCandidatesKey))##
+								#if(!$objJSONCandidate.isNull("id") && $objJSONCandidate.get("id") == $candidateID)##
+									#if($objJSONCandidate.get("name") == "Harry Reid")##
+										#set($candidateName = "H. Reid")##
+									#elseif($objJSONCandidate.get("name") == "Rory Reid")##
+										#set($candidateName = "R. Reid")##
+									#elseif($string.lastIndexOf($objJSONCandidate.get("name")," ") != -1)##
+										#set($candidateName = $string.substring($objJSONCandidate.get("name"),$math.add($string.lastIndexOf($objJSONCandidate.get("name")," "),1)))##
+									#else##
+										#set($candidateName = $objJSONCandidate.get("name"))##
+									#end
+									#if($officeType && $officeType != "" && !$objJSONCandidate.isNull("slug") && !$objJSONCandidate.isNull("candidate-id"))##
+										#if($officeType == "judicial")##
+											#set($judicialText = "${officeType}-")##
+										#else##
+											#set($judicialText = "")##
+										#end
+										#if($objJSONCandidate.get("slug") && $objJSONCandidate.get("slug") != "")##
+											#set($candidateSlug = $objJSONCandidate.get("slug"))##
+											#set($candidateIDSelector = " id=${quote}${candidateSlug}-${candidateID}${quote}")##
+										#else##
+											#set($candidateSlug = false)##
+										#end
+										#set($profileURL = "${domainString}/politics/candidates/${util.date('yyyy')}/${judicialText}office/${candidateSlug}-profile-${objJSONCandidate.get('candidate-id')}")##
+									#else##
+										#set($profileURL = false)##
+										#set($candidateSlug = false)##
+										#set($candidateID = false)##
+										#set($candidateIDSelector = "")##
+									#end									
+									#if($objJSONCandidate.getBoolean("incumbent"))##
+										#set($candidateIncumbent = "<span class=${quote}incumbent${quote}>*</span>")##
+									#else##
+										#set($candidateIncumbent = "")##
+									#end
+									#if($objJSONCandidate.getBoolean("winner"))##
+										#set($candidateWinner = "<img src=${quote}${cms.media('checkbox-gold-10px.png','images').url}${quote} alt=${quote}winner${quote} />")##
+									#else##
+										#set($candidateWinner = "")##
+									#end
+
+										<li${candidateIDSelector}${candidateListClass}>
+											<a href="${profileURL}"><img src="${cms.media($candidateImages.get($objJSONCandidate.get('id')),'images').url}" alt="$!{objJSONCandidate.get('name')}" class="candidate-img" /></a>
+											<p class="candidate $!{string.toLowerCase($objJSONCandidate.get('party'))}"><span class="bk-shade"></span><a href="${profileURL}">${candidateWinner}${candidateIncumbent}${candidateName}</a></p>
+											<p class="vote-percent">$!objJSONCandidate.get("total-vote-percent")</p>
+											<p class="vote-count">$!objJSONCandidate.get("total-vote")</p>
+										</li>
+								#end
+							#end
+						#end
+
+									</ul>	
+									<div class="precincts">
+										<p>Precincts Reporting: $!racePrecinctsPercent</p>
+										<span><span style="width: $!racePrecinctsPercent;"></span></span>
+									</div>
+									<p class="updated">$!raceModified</p>
+								</li>
+					#end
+				#end
+			#end					
+		#end						
+	#end								
+								
+							</ul>			
+#end

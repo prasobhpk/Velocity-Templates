@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:taxo="http://purl.org/rss/1.0/modules/taxonomy/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
+#########################################################################################################
+## Setup variables
+#########################################################################################################
+## Look into Media RSS - http://video.search.yahoo.com/mrss
+#set($domainString = "http://${cms.envHost}$cms.domain")##
+#set($curDate = $util.now)##
+#foreach($item in $cms.filteredLinks("Homepage","/",1,1))##
+	#set($homepageContent = $item)##
+#end
+## query should be either ?type=latest-news or ?type=buzzworthy
+#set($chpubDate = $homepageContent.modifiedDate)##
+#if($req.param("type") == "latest-news")##
+	#set($chTitle = "Las Vegas Review-Journal - Latest News")##
+	#set($chDescription = "Latest news from the Las Vegas Review-Journal.")##
+	#set($itemList = $homepageContent.latestNews)##
+	#set($maxArticles = 10)##
+#elseif($req.param("type") == "buzzworthy")##
+	#set($chTitle = "Las Vegas Review-Journal - Buzzworthy")##
+	#set($chDescription = "Buzzworthy news from the Las Vegas Review-Journal.")##
+	#set($itemList = $homepageContent.buzzworthy)##
+	#set($maxArticles = 4)##
+#end
+#if($maxArticles > $itemList.size())##
+	#set($maxArticles = $itemList.size())##
+#end
+#set($count = 0)##
+
+	<channel>
+		<title>$!chTitle</title>
+		<link>$!domainString</link>
+		<description>$!chDescription</description>
+		<language>en-us</language>
+		<pubDate>$!util.date("E, dd MMM yyyy hh:mm:ss z", $chpubDate, "GMT")</pubDate>
+		<lastBuildDate>$!util.date("E, dd MMM yyyy hh:mm:ss z", $util.now(), "GMT")</lastBuildDate>
+#foreach($itemID in $itemList)##
+	#set($item = $cms.content($itemID, false))##
+	#set($url = false)##
+	#set($title = "")##
+	#set($url = "")##
+	#set($description = "")##
+	#set($pubDate = "")##
+	#set($guid = "")##
+	#set($targetFound = false)##
+	#foreach($target in $item.contentTargets)##
+		#if(!$targetFound && !$target.isDead())##
+			#set($pubDate = $util.date("E, dd MMM yyyy HH:mm:ss z", $item.startDate, "GMT"))##
+			#set($title = $util.encode.xml($item.title))##
+			#set($url = $util.encode.xml($target.url))##
+			#set($guid = $itemID)
+			#if($item.ilead && $item.ilead != "")##
+				#set($description = $util.encode.xml($util.text($item.ilead)))##
+			#elseif($item.body && $item.body != "")
+				#set($inputString = $util.encode.xml($util.text($item.body)))##
+				#set($numChars = 150)##
+				$string.trim($cms.template("Get Shortened String"))##
+				#if($string.endsWith($outputString,"."))##
+					#set($description = "${outputString}..")##
+				#else##
+					#set($description = "${outputString}...")##
+				#end
+			#else##
+				#set($description = "")##
+			#end
+
+		<item>
+			<title>$!title</title>
+			<link>$!url</link>
+			<description>$!description</description>
+			<pubDate>$!pubDate</pubDate>
+			<guid isPermaLink="false">$!guid</guid>
+		</item>      
+		#end
+	#end
+#end
+
+	</channel>
+</rss>

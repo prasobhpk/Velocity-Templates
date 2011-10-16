@@ -1,0 +1,232 @@
+				<h4 class="title">Decision Day</h4>				
+				<div id="election-content">
+					<ol id="election-headlines">
+#########################################################################################################
+## Debug variables
+#########################################################################################################
+##
+##$cms.template("RJ - Setup")##
+##
+#########################################################################################################
+#########################################################################################################
+## Set max articles
+#########################################################################################################
+##
+#set($maxArticles = 5)##
+#if($maxArticles > $homepageContent.specialNews.size())##
+	#set($maxArticles = $homepageContent.specialNews.size())##
+#end
+#set($count = 0)##
+##
+#########################################################################################################
+## Election News loop
+#########################################################################################################
+##
+#foreach($articleID in $homepageContent.specialNews)##
+	#set($article = $cms.content($articleID, false))##
+##
+#########################################################################################################
+## Setup variables
+#########################################################################################################
+##
+	#set($url = false)##
+	#set($dateObject = false)##
+	#set($targetFound = false)##
+	#set($target = false)##
+	#set($title = "")##
+	#set($kicker = "")##
+	#set($intro = "")##
+	## Ensure article is live
+	#if($article.id == $articleID)##
+		#foreach($target in $article.contentTargets)##
+			#set($url = false)##
+			#if(!$targetFound && !$target.isDead())##
+				#if(!$article.thirdPartyURL && $article.thirdPartyURL != "")##
+					#set($url = $util.encode.form($article.thirdPartyURL))##
+					#set($commentURL = "")##
+				#else##
+					#set($url = $util.encode.form($target.url))##
+					#set($commentURL = "${util.encode.form($target.url)}#postComment")##
+				#end
+				#set($count = $math.add($count, 1))##
+				#set($targetFound = true)##
+				#set($dateFormats = $util.newHashMap)##
+				#set($foo = $dateFormats.put("default","MMM. d 'at' h:mm a"))##
+				#set($foo = $dateFormats.put("lessThan30Minutes","%c ago"))##
+				#set($foo = $dateFormats.put("sameDay","h:mm a"))##
+				#set($styleMeridiem = true)##
+				#set($useNbsp = true)##
+				#set($dateInput = $util.newDate)
+				$dateInput.setTime($article.modifiedDate.getTime())
+				$string.trim($cms.template("Format Date/Time"))##
+				#set($updated = $dateOutput)##
+				## Title
+				#set($title = $util.encode.form($article.title))##
+				#set($aTitle = $util.encode.form($article.title))##
+				## Kicker
+				#set($kicker = $util.encode.form($article.kicker))##
+				## Intro text
+				#if($article.iLead && $article.iLead != "")##
+					#set($intro = $string.trim($util.text($article.iLead)))##
+				#elseif($article.body && $article.body != "")##
+					#set($intro = $string.trim($util.text($article.body)))##
+				#end
+				#if($kicker && $kicker != "")##
+					#set($introLength = $math.add($math.add($string.length($intro),$string.length($kicker)),2))##
+				#else##
+					#set($introLength = $string.length($intro))##
+				#end
+				#if($title && $string.length($title) > 40 && $count <= 3)##
+					#set($inputString = $title)##
+					#set($numChars = 37)##
+					$string.trim($cms.template("Get Shortened String"))##
+					#set($$title = "${outputString}...")##		
+				#elseif($title && $string.length($title) > 35 && $count > 3)##
+					#set($inputString = $title)##
+					#set($numChars = 32)##
+					$string.trim($cms.template("Get Shortened String"))##
+					#set($$title = "${outputString}...")##	
+				#end			
+				#if($intro && !$article.commentsOff && $introLength > 73)##
+					#set($inputString = $intro)##
+					#set($numChars = 70)##
+					$string.trim($cms.template("Get Shortened String"))##
+					#set($intro = "${outputString}...")##
+				#elseif($intro && $article.commentsOff && $introLength > 83)##
+					#set($inputString = $intro)##
+					#set($numChars = 80)##
+					$string.trim($cms.template("Get Shortened String"))##
+					#set($intro = "${outputString}...")##
+				#end
+				#if($commentURL && $commentURL != "" && $util.inSameDay($article.modifiedDate, $util.now))##
+					#if($article.commentCount > 1)##
+						#set($commentCountTxt = "${article.commentCount}&nbsp;comments")##
+					#elseif($article.commentCount == 1)##
+						#set($commentCountTxt = "${article.commentCount}&nbsp;comment")##
+					#elseif($article.commentCount == 0)##
+						#set($commentCountTxt = "Add&nbsp;a&nbsp;comment!")##
+					#end
+					#set($countSpacer = "&nbsp;|&nbsp;")##
+				#else##
+					#set($commentCountTxt = "")##
+					#set($countSpacer = "")##
+				#end
+##
+#########################################################################################################
+## Election articles
+#########################################################################################################
+##
+				#if($url)##
+					#if($count <= $maxArticles)##
+						#if($count == 1)##
+							#set($listClass = " first")##
+						#elseif($count == $maxArticles)##
+							#set($listClass = " last")##
+						#else##
+							#set($listClass = "")##		
+						#end
+						#if($count <= 3)##
+
+						<li class="article-${count}${listClass}">
+							#if($count == 1)##
+							
+							<h2><a href="${url}" title="${aTitle}">$title</a></h2>
+							#else##
+
+							<h3><a href="${url}" title="${aTitle}">$title</a></h3>
+							#end
+							#if($kicker && $kicker != "")##
+
+							<h5 class="kicker breaking">$kicker</h5>
+							#end
+
+							<p>${intro} #if($commentCountTxt && $commentCountTxt != "")<a href="$!{commentURL}" class="comments txt-gray">$!commentCountTxt</a>#end<span class="txt-gray timestamp">${countSpacer}${updated}</span></p>
+						</li>
+						#else##
+
+						<li class="article-${count}${listClass}"><h3><a href="${url}" title="${aTitle}">$title</a></h3><span class="txt-gray timestamp">&nbsp;|&nbsp;$updated</span></li>						
+						#end
+					#end
+				#end
+			#end
+		#end
+	#end
+#end
+
+					</ol>
+					<div id="election-results">
+##
+#########################################################################################################
+## Top Races Voting Results
+#########################################################################################################
+##
+						<div id="top-races">
+$cms.template("top-races-voting-results.html")##
+						</div>					
+						<div id="election-bottom">
+##
+#########################################################################################################
+## Election Multimedia
+#########################################################################################################
+##
+							<div id="election-multimedia">
+#set($multimediaSearch = $cms.newSearch)##
+$multimediaSearch.pageSize(1)##
+$multimediaSearch.addWSS("/multimedia")##
+$multimediaSearch.addCategorization($cms.getCategorization([2757],[884414]))##
+$multimediaSearch.addContentType("Media - Video")##
+$multimediaSearch.addContentType("Media - Slideshow")##
+$multimediaSearch.setSortBy("-startDate")##
+#foreach($item in $multimediaSearch.execute)##
+	#if($velocityCount == 1)##
+		#set($contentItem = $cms.content($item.contentID.intValue(), false))##
+		#set($targetFound = false)##
+		#set($title = "")##
+		#set($url = "")##
+		#foreach($target in $contentItem.contentTargets)##
+			#if(!$targetFound && ($target.isLive() || $target.isArchive()))##
+				#set($url = $target.url)##
+				#set($title = $contentItem.title)##
+				#if($string.length($title) > 75)##
+					#set($inputString = $title)##
+					#set($numChars = 72)##
+					$string.trim($cms.template("Get Shortened String"))##
+					#set($title = "${outputString}...")##
+				#end
+				
+								<h4><a href="${domainString}/multimedia">Multimedia</a></h4>
+								<h3><a href="$!{url}">$!{title}</a></h3>
+				#if($contentItem.prevImage)##
+					#set($imageWidth = 152)##
+					#if($contentItem.prevImage.width >= $imageWidth)##
+						#set($resizePct = $math.divide($imageWidth, $contentItem.prevImage.width))##
+						#set($resizeHeight = $math.newInt($math.multiply($contentItem.prevImage.height, $resizePct)))##
+
+								<a href="$!{item.url}">$util.resizeImageTag($contentItem.prevImage, $imageWidth, $resizeHeight)</a>
+					#end
+				#end
+				#if($contentItem.typeName == "Media - Video")##
+					#set($mediaType = "Video")##
+				#elseif($contentItem.typeName == "Media - Slideshow")##
+					#set($mediaType = "Slideshow")##
+				#end
+
+								<p><a href="$!{url}">$mediaType &#187;</a></p>
+			#end
+		#end
+
+							</div>
+	#end
+#end
+##
+#########################################################################################################
+## Other Races Voting Results
+#########################################################################################################
+##
+
+							<div id="other-races">
+$cms.template("other-races-voting-results.html")##
+							</div>
+						</div>
+					</div>
+				</div>

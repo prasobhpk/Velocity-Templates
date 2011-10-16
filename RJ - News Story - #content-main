@@ -1,0 +1,488 @@
+########################################################################################################
+## Debug - Setup Templates 
+## $cms.template("RJ - Setup")##
+## $cms.template("RJ - News Story - Setup")##
+########################################################################################################
+				<div class="rj-prefix-1 rj-suffix-1">
+					<!-- startclickprintinclude -->
+#if($columnistName && $columnistName != "")##
+					<div id="columnist">
+						<h2>$columnistName #if($columnName && $columnName != "")<span class="columnname">| $columnName</span>#end</h2>
+					
+						$util.unlinkedResizeImageTag($columnistImage, 100, 0)
+						<h1>$!{title}</h1>
+					</div>
+#elseif($curSection.path == "/opinion" && $kicker && $kicker.trim() != "")##
+					<div id="multi-title">
+						<h2 class="kicker">$kicker</h2>
+						<h1>$!{title}</h1>
+					</div>
+#else##		
+					<h1>$!{title}</h1>
+#end
+
+					<!--startclickprintexclude-->
+## Determine lead media item (Image or Video - automatically an Image if before 12/1/2010)
+#if($leadMediaType == "media" && $relatedMedia.size() > 0 && ($relatedMedia.get(0).typeName == "Media - Video" || $relatedMedia.get(0).typeName == "Media - Third Party Video"))##
+	#set($leadVideo = true)##
+#else##
+	#if($imagesArray.size() > 0)##
+		#set($leadMediaType = "image")##
+		#set($leadVideo = false)##
+	#elseif($content.image1 && $content.image1.url != "")
+		#set($leadMediaType = "image")##
+		#set($leadVideo = false)##
+	#else##
+		#set($leadMediaType = false)##
+		#set($leadVideo = false)##	
+	#end
+#end
+#if($imagesArray.size() > 0 && (($leadMediaType == "image" && !$leadVideo) || ($util.isBefore($updated,$util.newDate(2010,12,1)))))##
+	#set($leadMedia = $imagesArray.get(0))##
+	#set($useLeadImage = true)##
+#elseif($leadVideo)##
+	#set($leadMedia = $relatedMedia.get(0))##
+	#set($useLeadVideo = true)##
+#elseif($content.image1 && $content.image1.url != "")
+	#set($useLeadImage = true)##
+	#set($leadMedia = $content.image1)
+#end
+## Add lead media code
+#if($useLeadImage && $leadMedia)##
+	#set($leadImageWidth = $leadMedia.width)##
+	#set($leadImageHeight = $leadMedia.height)##
+	#if($leadImageWidth >= $leadImageHeight)##
+		#set($imgOrientation = "horizontal")##
+		#set($imgContainerID = "ppy1")##
+		#set($imgGridClass = "rj-grid-14 rj-alpha rj-omega")##
+		#set($stageWidth = 424)##
+	#else##
+		#set($imgOrientation = "vertical")##
+		#set($imgContainerID = "ppy2")##
+		#set($imgGridClass = "rj-grid-8 rj-alpha rj-omega")##
+		#set($stageWidth = 238)##
+	#end
+	#set($stageHeight = $math.round($math.multiply($math.divide($leadImageWidth,$leadImageHeight),$stageWidth)))##
+	#if($imgContainerID == "ppy2")##					
+					<div class="vertical-img">
+	#end
+						<div id="$!{imgContainerID}" class="photo $!imgGridClass ppy $!{imgOrientation}">
+							<ul class="ppy-imglist">
+	#if($combineImages)##
+		#set($imgListSize = $imagesArray.size())##
+	#else##
+		#set($imgListSize = 1)##
+	#end
+	#if($content.image1 && $content.image1.url != "")
+			#set($img = $content.image1)	
+			#set($imgURL = $img.url)##
+			#if($img.caption && $img.caption.trim() != "")##
+				#set($imgCaption = $img.caption)##
+			#else##
+				#set($imgCaption = false)##
+			#end
+			#if($img.credit && $img.credit.trim() != "")##
+				#set($imgCredit = $img.credit)##
+			#else##
+				#set($imgCredit = false)##
+			#end
+			#set($captionExtras = "")##
+			#if($combineImages)##
+				#set($captionExtras = " <span class=${quote}more-photos${quote}></span>")##
+			#end
+			#if($img.width > 150 && $img.height > 150 && $string.lastIndexOf($string.toLowerCase($img.credit), "courtesy") == -1 && $string.lastIndexOf($string.toLowerCase($img.credit), "special to") == -1 &&  $imgCredit != "" && $string.lastIndexOf($string.toLowerCase($img.credit), "review") != -1)##
+				#set($pictopiaURL = "http://gallery.pictopia.com/lasvegas/e/?photo_name=$!{img.filename}&embedded=y&t_url=http%3A//media.lvrj.com/images/$!{img.filename}&caption=$!{imgCaption}")##
+				#set($captionExtras = "${captionExtras} &#187;&nbsp;<a href=${quote}${pictopiaURL}${quote}>Buy&nbsp;this&nbsp;photo</a>")##
+			#end
+
+								<li>
+									<a href="${imgURL}">$util.unlinkedResizeImageTag($img, $stageWidth, 0)</a>
+									<div class="ppy-extcaption">
+			#if($imgCredit && $imgCredit != "")##
+
+										<p class="credit">$imgCredit</p>
+			#end
+			#if($imgCaption && $imgCaption != "")##
+			
+										<p class="caption">${imgCaption}${captionExtras}</p>
+			#end
+
+									</div>
+								</li>
+	#else
+	#foreach($img in $imagesArray)##
+		#if($velocityCount <= $imgListSize)##
+			#set($imgURL = $img.url)##
+			#if($img.caption && $img.caption.trim() != "")##
+				#set($imgCaption = $img.caption)##
+			#else##
+				#set($imgCaption = false)##
+			#end
+			#if($img.credit && $img.credit.trim() != "")##
+				#set($imgCredit = $img.credit)##
+			#else##
+				#set($imgCredit = false)##
+			#end
+			#set($captionExtras = "")##
+			#if($combineImages)##
+				#set($captionExtras = " <span class=${quote}more-photos${quote}></span>")##
+			#end
+			#if($img.width > 150 && $img.height > 150 && $string.lastIndexOf($string.toLowerCase($img.credit), "courtesy") == -1 && $string.lastIndexOf($string.toLowerCase($img.credit), "special to") == -1 &&  $imgCredit != "" && $string.lastIndexOf($string.toLowerCase($img.credit), "review") != -1)##
+				#set($pictopiaURL = "http://gallery.pictopia.com/lasvegas/e/?photo_name=$!{img.filename}&embedded=y&t_url=http%3A//media.lvrj.com/images/$!{img.filename}&caption=$!{imgCaption}")##
+				#set($captionExtras = "${captionExtras} &#187;&nbsp;<a href=${quote}${pictopiaURL}${quote}>Buy&nbsp;this&nbsp;photo</a>")##
+			#end
+
+								<li>
+									<a href="${imgURL}">$util.unlinkedResizeImageTag($img, $stageWidth, 0)</a>
+									<div class="ppy-extcaption">
+			#if($imgCredit && $imgCredit != "")##
+
+										<p class="credit">$imgCredit</p>
+			#end
+			#if($imgCaption && $imgCaption != "")##
+			
+										<p class="caption">${imgCaption}${captionExtras}</p>
+			#end
+
+									</div>
+								</li>
+		#end
+	#end
+	#end
+
+							</ul>
+							<div class="ppy-outer">
+								<div class="ppy-stage" style="width: ${stageWidth}px; height: ${stageHeight}px;">
+									<div class="ppy-nav">
+										<a class="ppy-prev" title="Previous image">Previous image</a>
+										<a class="ppy-switch-enlarge" title="Enlarge">Enlarge</a>
+										<a class="ppy-switch-compact" title="Close">Close</a>
+										<a class="ppy-next" title="Next image">Next image</a>
+									</div>
+									<div class="ppy-counter">
+										<strong class="ppy-current"></strong> / <strong class="ppy-total"></strong> 
+									</div>
+								</div>
+								<div class="ppy-caption">
+									<div class="ppy-text"></div>
+								</div>
+							</div>
+						</div>
+	#if($imgContainerID == "ppy2")##					
+					</div>
+	#end				
+#elseif($useLeadVideo && $leadMedia)##
+	#if($relatedMedia.contains($leadMedia))##
+		#set($foo = $relatedMedia.remove($relatedMedia.indexOf($leadMedia)))##
+	#end
+	#if(!$combineImages && $imagesArray.size() > 2)##
+		#set($combineImages = true)##
+	#end
+	##
+	#if($leadMedia.typeName == "Media - Video")##
+		#set($videoID = $leadMedia.id)##
+		#set($playerType = "article")##
+		#set($playerWidth = 424)##
+		#set($videoContainerID = "lead-media")##
+
+					$string.trim($cms.template("RJ - Local Video Player"))##	
+	#elseif($leadMedia.typeName == "Media - Third Party Video")##
+		#set($videoItem = $leadMedia)##
+		#set($playerResizeWidth = 424)##
+		#set($playerResizeHeight = false)##
+		
+					$string.trim($cms.template("RJ - Third Party Video Player"))##
+	#end
+#end				
+
+					<div id="right-col-content" class="rj-grid-5 rj-alpha rj-omega"><div id="right-col-content-inner">
+				
+						$string.trim($cms.template("RJ - Content - Tools"))
+
+#if($sidebar1 && $sidebar1 != "")##
+						<div id="sidebar-content">
+$sidebar1
+						</div>
+#end
+#if(($imagesArray.size() >= 2 && !$combineImages) || ($imagesArray.size() >= 1 && $useLeadVideo) || ($imagesArray.size() >= 1 && !$leadMediaType))##
+						<div id="more-photos">
+	#foreach($img in $imagesArray)##
+		#if((($useLeadVideo || !$leadMediaType) && $velocityCount >= 1 && ((!$combineImages && $velocityCount <= 2) || ($combineImages && $velocityCount <= $imagesArray.size()))) || ($useLeadImage && $velocityCount >= 2 && (!$combineImages && $velocityCount <= 3)))##
+			#if($useLeadImage && $velocityCount == 2 && !$combineImages)##
+				#set($singleImageItem = true)##
+				#if($imagesArray.size() > 2)##
+
+							<h4>More Photos</h4>
+							<div class="extra-photo first">
+				#else##
+				
+							<div class="extra-photo">				
+				#end
+			#elseif(((($useLeadVideo || !$leadMediaType) && $velocityCount <= 2) || ($useLeadImage && $velocityCount <= 3)) && !$combineImages)##
+				#set($singleImageItem = true)##
+
+							<div class="extra-photo">
+			#elseif(($useLeadVideo || !$leadMediaType) && $velocityCount == 1 && $combineImages)##
+				#set($singleImageItem = false)##
+
+							<div class="extra-photo">
+			#else##
+				#set($singleImageItem = false)##
+			#end
+			#set($imgWidth = $img.width)##
+			#set($imgHeight = $img.height)##
+			#if(($velocityCount == 2 && $singleImageItem && $useLeadImage) || ($velocityCount == 1 && $useLeadVideo) || ($velocityCount == 1 && !$leadMediaType))##
+				#set($imgContainerID = "ppy3")##
+			#elseif($singleImageItem && (($velocityCount == 3 && $useLeadImage) || ($velocityCount == 2 && $useLeadVideo)  || ($velocityCount == 2 && !$leadMediaType)))##
+				#set($imgContainerID = "ppy4")##
+			#else##
+				#set($imgContainerID = "")##
+			#end
+			#set($stageWidth = 145)##
+			#set($stageHeight = $math.round($math.multiply($math.divide($imgWidth,$imgHeight),$stageWidth)))##
+			#if($imgContainerID && $imgContainerID != "")##
+
+								<div id="${imgContainerID}" class="photo ppy">
+									<ul class="ppy-imglist">
+			#end
+			#if($velocityCount <= $imagesArray.size())##
+				#set($imgURL = $img.url)##
+				#if($img.caption && $img.caption.trim() != "")##
+					#set($imgCaption = $img.caption)##
+				#else##
+					#set($imgCaption = false)##
+				#end
+				#if($img.credit && $img.credit.trim() != "")##
+					#set($imgCredit = " $img.credit")##
+				#else##
+					#set($imgCredit = false)##
+				#end
+				#set($captionExtras = "")##
+				#if($combineImages)##
+					#set($captionExtras = " <span class=${quote}more-photos${quote}></span>")##
+				#end
+				#if($img.width > 150 && $img.height > 150 && $string.lastIndexOf($string.toLowerCase($img.credit), "courtesy") == -1 && $string.lastIndexOf($string.toLowerCase($img.credit), "special to") == -1 &&  $imgCredit != "" && $string.lastIndexOf($string.toLowerCase($img.credit), "review") != -1)##
+					#set($pictopiaURL = "http://gallery.pictopia.com/437/e/?photo_name=$!{img.filename}")##
+					#set($captionExtras = "${captionExtras} &#187;&nbsp;<a href=${quote}${pictopiaURL}${quote}>Buy&nbsp;this&nbsp;photo</a>")##
+				#end
+
+										<li>
+											<a href="${imgURL}">$util.unlinkedResizeImageTag($img, $stageWidth, 0)</a>
+											<div class="ppy-extcaption">
+				#if($imgCaption && $imgCaption != "")##
+	
+											<p class="caption">${imgCaption}#if($imgCredit && $imgCredit != "")<span class="credit">$!{imgCredit}</span>#end${captionExtras}</p>
+				#end
+
+											</div>
+										</li>
+				#if($singleImageItem || (($useLeadVideo || !$leadMediaType) && $velocityCount == $imagesArray.size() && $combineImages))##
+
+									</ul>
+									<div class="ppy-outer">
+										<div class="ppy-stage" style="width: ${stageWidth}px; height: ${stageHeight}px;">
+											<div class="ppy-nav">
+												<a class="ppy-prev" title="Previous image">Previous image</a>
+												<a class="ppy-switch-enlarge" title="Enlarge">Enlarge</a>
+												<a class="ppy-switch-compact" title="Close">Close</a>
+												<a class="ppy-next" title="Next image">Next image</a>
+											</div>
+											<div class="ppy-counter">
+												<strong class="ppy-current"></strong> / <strong class="ppy-total"></strong> 
+											</div>
+										</div>
+										<div class="ppy-caption">
+											<div class="ppy-text"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+				#end
+			#end
+		#end
+	#end
+
+						</div>
+#end
+#if($relatedMedia && $relatedMedia.size() > 0)##
+
+						<div id="extra-media">
+							<h4>Extra Media</h4>
+							<ul>
+	#foreach($media in $relatedMedia)##	
+		#set($listArray = $relatedMedia)##
+		#set($isThirdPartyURL = false)##
+		$string.trim($cms.template("Display List Class"))##
+		#if($media.typeName == "Media - Third Party Video")##
+			#if($media.thirdPartyService == "YouTube")##
+				#set($mediaURL = "http://www.youtube.com/watch?v=${media.videoID}")##
+				#set($isThirdPartyURL = true)##
+			#elseif($media.thirdPartyService == "NDN")##
+				#set($mediaURL = "${domainString}/multimedia/national/${media.videoID}")##		
+			#else##
+				#set($mediaURL = "")##
+			#end
+		#else##
+			#set($mediaURL = $media.url)##
+		#end
+		#set($mediaTitle = $media.title)##
+		#if($mediaContentTypes.get($media.typeName) == "check-type")##
+			#if($media.typeName == "Media - Slideshow")##
+				#if($media.slideshowType = "External Audio Slideshow (Soundslides)")##
+					#set($mediaType = "Audio Slideshow")##
+				#else##
+					#set($mediaType = "Slideshow")##
+				#end
+			#elseif($media.typeName == "Media - Third Party Video")##
+				#if($media.thirdPartyService == "NDN")##
+					#set($mediaType = "Video")##
+				#else##
+					#set($mediaType = "$media.thirdPartyService Video")##
+				#end
+			#elseif($media.typeName == "Media - AP")##	
+				#set($mediaType = $media.mediaType)##
+			#else##
+				#set($mediaType = "")##
+			#end
+		#else
+			#set($mediaType = $mediaContentTypes.get($media.typeName))##
+			#set($mediaType = "${string.toUpperCase($string.substring($mediaType,0,1))}${string.substring($mediaType,1)}")##
+		#end
+		#set($mediaPVImage = $media.prevImage)##
+		## Resized image should not exceed a height of 100px
+		#if($math.round($math.multiply($math.divide($mediaPVImage.height,$mediaPVImage.width),145)) <= 100)##
+
+								<li${listClass}>
+									<a href="$!{mediaURL}">$util.unlinkedResizeImageTag($mediaPVImage,145,0)</a>
+									<h5><a href="$!{mediaURL}"#if($isThirdPartyURL) target="_blank"#end>$!mediaTitle</a></h5>
+									<div class="media-overlay"><a href="$!{mediaURL}"#if($isThirdPartyURL) target="_blank"#end><span class="media-type">$!mediaType</span><span class="play-button"></span></a></div>
+								</li>
+		#end
+	#end
+
+							</ul>
+						</div>
+#end
+## Display related items if body length is longer than 1330 characters
+#if($body.length() > 1100)##
+	#if($relatedColumns && $relatedColumns.size() > 0)##
+	
+						<div id="more-columns">
+							<h4>More Columns</h4>
+							<ul>
+		#foreach($column in $relatedColumns)##
+			#set($listArray = $relatedColumns)##
+			$string.trim($cms.template("Display List Class"))##
+			#set($columnTitle = $column.title)##
+			#set($columnURL = $column.url)##
+	
+								<li${listClass}><h5><a href="${columnURL}">$columnTitle</a></h5></li>
+		#end
+	
+							</ul>
+		#if($columnistURL && $columnistURL != "")##
+	
+							<p class="archive"><a href="$columnistURL">Full archive</a></p>
+		#end
+	
+						</div>
+	#end
+	#if($relatedBlogs && $relatedBlogs.size() > 0)##
+	
+						<div id="more-blogs">
+							<h4>More Blogs</h4>
+							<ul>
+		#foreach($blog in $relatedBlogs)##
+			#set($listArray = $relatedBlogs)##
+			$string.trim($cms.template("Display List Class"))##
+			#set($blogTitle = $blog.title)##
+			#set($blogURL = $blog.url)##
+	
+								<li${listClass}><h5><a href="${blogURL}">$blogTitle</a></h5></li>
+		#end
+	
+							</ul>
+						</div>
+	#end
+	#if($relatedContent && $relatedContent.size() > 0)##
+	
+						<div id="related-content">
+							<h4>Related Content</h4>
+							<ul>
+		#foreach($rContent in $relatedContent)##
+			#set($listArray = $relatedContent)##
+			$string.trim($cms.template("Display List Class"))##
+			#set($rContentTitle = $rContent.title)##
+			#if($rContent.thirdPartyURL && $rContent.thirdPartyURL.trim() != "")
+				#set($rContentURL = $rContent.thirdPartyURL)##	
+			#else##
+				#set($targetFound = false)##
+				#foreach($target in $rContent.contentTargets)##
+					#if(!$targetFound && !$target.isDead())##
+						#set($targetFound = true)##
+						#if($rContent.typeName == "Landing Page")##
+							#set($rContentURL = "$!{domainString}${target.path}")##	
+						#else##
+							#set($rContent = $cms.content($rContent.id, $target.path))##
+							#set($rContentURL = $rContent.url)##
+						#end
+					#end
+				#end
+			#end
+	
+								<li${listClass}><h5><a href="${rContentURL}">$rContentTitle</a></h5></li>
+		#end
+	
+							</ul>
+						</div>
+	#end
+#end
+					</div></div>
+				<!--endclickprintexclude-->
+				
+#if($corrections && $corrections != "")##
+	#if($string.indexOf($string.toLowerCase($string.substring($corrections,0,35)),"correction") == -1 && $string.indexOf($string.toLowerCase($string.substring($corrections,0,35)),"clarification") == -1)##
+
+					<div id="correction"><span class="txt-red">Correction:</span> $corrections</div>
+	#else##
+
+					<div id="correction">$corrections</div>
+	#end
+#end
+#if($byline && $byline != "")##
+
+					<div id="byline">$byline</div>
+#end
+#if(($posted && $posted != "") || ($updated && $updated != ""))##
+
+					<div id="updated">#if($posted && $posted != "")Posted: $posted#end #if($posted && $posted != "" && $updated && $updated != "")<br />#end #if($updated && $updated != "")Updated: ${updated}#end</div>
+#end
+#if($body && $body != "")##
+
+					<div id="body">
+$body
+#if($content.thirdPartyURL && $content.thirdPartyURL!= "")<p><a href="${content.thirdPartyURL}">Read more...</a></p>#end
+					</div>
+#end
+#if($sidebar3 && $sidebar3 != "")##
+					<div id="body-extra">
+$sidebar3
+					</div>
+#end
+				<!-- endclickprintinclude -->
+#if($keywordsArray && $keywordsArray.size() > 0)##
+
+					<div id="trending-topics">
+						<h4>Trending topics:</h4>
+						<ul>
+	#foreach($keyword in $keywordsArray)##
+		#set($listArray = $keywordsArray)##
+		$string.trim($cms.template("Display List Class"))##
+
+							<li${listClass}><a href="${domainString}/search?keywords=${util.encode.url($keyword)}&amp;metakeyword=y">$keyword</a></li>
+	#end
+
+						</ul>
+					</div>
+#end
+				</div>

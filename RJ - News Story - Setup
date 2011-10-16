@@ -1,0 +1,587 @@
+########################################################################################################
+## Setup for Tools column in News Story content pages
+########################################################################################################
+## Debug variables
+## $cms.template("RJ - Setup")##
+##
+########################################################################################################
+## Setup Variables Reference
+########################################################################################################
+##
+## $colCatObject - content items columnist categorization object
+## $promoArray - array of promotional section paths
+## $isPromotional - boolean (true/false) specifying if current section is promotional
+## $topicCatArray - array of the content items categorization object for topics
+## $topicCatIDArray - array of category IDs from the $topicCatArray
+## $topicCatSetIDArray - array of category set IDs, matching the size of $topicCatIDArray, for use in $cms.getCategorization()
+## $imagesArray - array of image/media objects from the content items Images media array
+## $leadMediaType - specifies what media should lead the article. Options: image, media (video or slideshow), false (none)
+## $combineImages - boolean (true/false) detemining if the images need to be combined for display or individually listed
+## $keywordsArray - array of keywords from the content items .metadata field
+## $title - headline from the content items .title field
+## $kicker - kicker from content items .kicker field
+## $pageTitleShort - headline/title used for meta and social media purposes
+## $corrections - correction text from the content items .corrections field
+## $byline - byline text from the content items .byline field
+## $posted - posted date object from the .startDate (Publish Date) field
+## $updated - modified date object based on the content items modified date
+## $body - body text from the content items .body field
+## $columnist - Columnist content item associated with the content items Columnist categorization
+## $columnistName - columnists first and last name from the Columnist content item
+## $columnName - column name based on .kicker and must be different than $columnistName
+## $columnistImage - columnists thumbnail image from the columnist content item
+## $columnistURL - columnists page URL for the columnist content item
+## $sidebar1 - text from the content items .sidebar1 field
+## $sidebar3 - text from the content items .sidebar3 field
+## $disableComments - boolean (true/false) detemining if the comments should be disabled
+## $commentCount - number of user comments associated with content item
+## $relatedMedia - array list of related media objects (video, slideshow, etc.)
+## $relatedColumns - if there is a columnist categorization, array list of content objects with the columnists categorization
+## $relatedBlogs - if there is a columnist categorization and the columnist has a blog, array list of the blogs content objects
+## $relatedContent - content from the related content field, topic categorization, columnist categorization and keyword site search
+## $metaImg - the URL of the contents image used in the metadata
+## $metaImgFull - full sized image url of $metaImg
+## $metaMedium - the contents medium type used in the metadata
+##
+########################################################################################################
+## Verify variables exist
+########################################################################################################
+#if(!$domainString || $domainString == "")##
+	#set($domainString = "http://${cms.envHost}$cms.domain")##
+#end
+#if(!$curSection)##
+	#set($curSection = $cms.websiteSection)##
+#end
+#if(!$curDate)##
+	#set($curDate = $util.now)##
+#end
+#if(!$content && $cms.content)##
+	#set($content = $cms.content)##
+#end
+##
+########################################################################################################
+## Create category objects
+########################################################################################################
+##
+## Set columnist cateogization object
+#if(!$content.getCategorization().getCategory(2351).name.toString().equals("Uncategorized"))##
+	#set($colCatObject = $content.getCategorization().getCategory(2351))##
+	#set($colCatCriteria = $cms.getCategorization([2351],[$colCatObject.id]))
+#else##
+	#set($colCatObject = false)##
+	#set($colCatCriteria = false)##
+#end
+##
+## Creates an array of topic(s) categorization objects
+#set($topicCatArray = $util.newArrayList)##
+#set($topicCatSetIDArray = $util.newArrayList)##
+#set($topicCatIDArray = $util.newArrayList)##
+#if(!$content.getCategorization().getCategory(2757).name.toString().equals("Uncategorized"))##
+	#set($topicCatArray = $content.getCategorization().getCategories(2757))##
+	## Create category set ID & category ID arrays
+	#foreach($topicCatObject in $topicCatArray)##
+		#set($foo = $topicCatSetIDArray.add(2757))##
+		#set($foo = $topicCatIDArray.add($topicCatObject.id))##
+	#end 
+#end
+##
+########################################################################################################
+## Determine if promotional section
+########################################################################################################
+## Array of section paths that are promotional
+#set($promoArray = $util.newArrayList)##
+#set($foo = $promoArray.add("/golf"))##
+#set($foo = $promoArray.add("/employment"))##
+#set($foo = $promoArray.add("/home_and_garden"))##
+#set($foo = $promoArray.add("/health"))##
+#set($foo = $promoArray.add("/real_estate"))##
+#set($foo = $promoArray.add("/drive"))##
+#set($foo = $promoArray.add("/sponsored"))##
+#if($promoArray.contains($curSection.path))##
+	#set($isPromotional = true)##
+#else##
+	#set($isPromotional = false)##
+#end
+##
+########################################################################################################
+## Create image array and determine how images will display
+########################################################################################################
+##
+#set($imagesArray = $util.newArrayList)##
+#if($content.images.size() > 0)##
+	#set($imagesArray = $content.images)##
+#end
+#if($content.leadMedia == "First photo in Images")##
+	#set($leadMediaType = "image")##
+	#set($combineImagesSize = 3)##
+#elseif($content.leadMedia == "First media item in Related Content")##
+	#set($leadMediaType = "media")##
+	#set($combineImagesSize = 2)##
+#elseif($content.leadMedia == "Display no lead media")##
+	#set($leadMediaType = false)##
+	#set($combineImagesSize = 2)##
+#else##
+	#set($leadMediaType = "image")##
+	#set($combineImagesSize = 3)##
+#end
+#if($imagesArray.size() > $combineImagesSize)##
+	#set($combineImages = true)##
+#else##
+	#set($combineImages = false)##
+#end
+##
+########################################################################################################
+## Content Variables
+########################################################################################################
+## New Story specific keywords and keywords array
+#set($keywordsArray = $util.newArrayList)##
+#if($content.metadata && $content.metadata != "")
+	#set($keywords = $content.metadata)##
+	#foreach($keyword in $string.split($content.metadata,","))##
+		#if($string.trim($keyword) != "")##
+			#set($foo = $keywordsArray.add($keyword))##
+		#end
+	#end
+#else##
+	#set($keywords = "")##
+#end
+## Title
+#if($content.title && $content.title != "")##
+	#set($title = $util.encode.form($content.title))##
+	#set($pageTitleShort = $util.text($content.title))##
+#else##
+	#set($title = "")##
+	#set($pageTitleShort = "")##
+#end
+## Kicker
+#if($content.kicker && $content.kicker.trim() != "")
+	#set($kicker = $util.encode.form($content.kicker))##
+#else##
+	#set($kicker = "")##
+#end
+## Corrections
+#if($content.corrections && $content.corrections != "")##
+	#set($corrections = $content.corrections)##
+#else##
+	#set($corrections = "")##
+#end
+## Byline
+#if($content.byline && $content.byline.trim() != "")##
+	#if($content.byline.indexOf("<br />") == -1 && $content.byline.indexOf("<br/>") == -1 && $content.byline.indexOf("<br>") == -1)
+		#set($byline = $util.html($content.byline))##
+	#else
+		#set($byline = $content.byline)##
+	#end
+#else##
+	#set($byline = "")##
+#end
+##
+## Format Modified Date/Updated Date Object
+#set($styleMeridiem = true)##
+#set($dateFormats = $util.newHashMap)##
+#set($foo = $dateFormats.put("default","MMM. d, yyyy '|' h:mm a"))##
+## Create new date object without seconds and milliseconds
+#set($startDate = $util.newDate($math.newInt($util.date("yyyy", $content.startDate)), $math.newInt($util.date("M", $content.startDate)), $math.newInt($util.date("d", $content.startDate)), $math.newInt($util.date("H", $content.startDate)), $math.newInt($util.date("m", $content.startDate))))##
+#set($modifiedDate = $util.newDate($math.newInt($util.date("yyyy", $content.modifiedDate)), $math.newInt($util.date("M", $content.modifiedDate)), $math.newInt($util.date("d", $content.modifiedDate)), $math.newInt($util.date("H", $content.modifiedDate)), $math.newInt($util.date("m", $content.modifiedDate))))##
+#if($startDate)##
+	#set($dateInput = $startDate)##
+	$cms.template("Format Date/Time")##
+	#set($posted = $dateOutput)##
+#else##
+	#set($posted = "")##
+#end
+#if($modifiedDate && $startDate && !$util.isEqualTime($startDate, $modifiedDate))##
+	## Display modified date if it is not within 15 minutes of publish date, is not between 1:55 a.m. and 2:30 a.m. and the publish date is prior to the modified date
+	#set($compareModDate = $util.date("M-d-yyyy", $content.modifiedDate))##
+	#if(!$util.isBetween($modifiedDate,$startDate,$util.add($startDate,"minute",15)) && !$util.isBetween($content.modifiedDate,$util.parseDate("$compareModDate 1:55", "M-d-yyyy H:mm"),$util.parseDate("$compareModDate 2:30", "M-d-yyyy H:mm")) && $util.isBefore($startDate,$modifiedDate))##
+		#set($dateInput = $modifiedDate)##
+		$cms.template("Format Date/Time")##
+		#set($updated = $dateOutput)##
+	#else##
+		#set($updated = "")##
+	#end
+#else##
+	#set($updated = "")##
+#end
+## Body text
+#if($content.body && $content.body.trim() != "")##
+	#set($body = $content.body.trim())##
+#else##
+	#set($body = "")##
+#end
+## Columnist content item
+#if($colCatObject && $colCatObject.name.toString() != "Uncategorized")##
+	#set($columnistLinks = $cms.newLinks)##
+	$columnistLinks.addContentType("Columnists")##
+	$columnistLinks.setDestination("/columnists")##
+	$columnistLinks.setCategorization($colCatCriteria)##
+	#foreach($item in $columnistLinks.links(1,1))##
+		#set($columnist = $item)##
+	#end
+	## Columnist name
+	#if(($columnist.firstName && $columnist.firstName != "") && ($columnist.lastName && $columnist.lastName != ""))##
+		#set($columnistName = "$columnist.firstName $columnist.lastName")##
+	#else##
+		#set($columnistName = "")##
+	#end
+	#if($content.kicker && $content.kicker != "" && $columnistName && $columnistName != "")##
+		#if($string.toUpperCase($content.kicker) != $string.toUpperCase($columnistName))##
+			#set($columnName = 	$util.encode.form($content.kicker))##
+		#else##
+			#set($columnName = 	"")##
+		#end
+	#else##
+		#set($columnName = 	"")##
+	#end
+	## Columnist thumbnail
+	#if($columnist.thumbnail)##
+		#set($columnistImage = $columnist.thumbnail)##
+	#else##
+		#set($columnistImage = false)##
+	#end
+	## Columnist URL
+	#if($columnist.url && $columnist.url != "")##
+		#set($columnistURL = $columnist.url)##
+	#else##
+		#set($columnistURL = "")##
+	#end
+#end
+## Sidebar1 content, remove iSidebar tags
+#if($content.sidebar1 && $content.sidebar1.trim() != "")##
+	#set($sidebar1 = $content.sidebar1)##
+	#if($string.lastIndexOf($sidebar1, "||| -->") != -1)##
+		#set($startSidebar1 = $math.add($string.lastIndexOf($sidebar1, "||| -->"),7))##
+		#set($sidebar1 = $string.substring($sidebar1, $startSidebar1))##
+	#end
+	#set($sidebar1 = $sidebar1.trim())##
+#elseif($content.sidebar && $content.sidebar.trim() != "")##
+	#set($sidebar1 = $content.sidebar)##
+	#if($string.lastIndexOf($sidebar1, "||| -->") != -1)##
+		#set($startSidebar1 = $math.add($string.lastIndexOf($sidebar1, "||| -->"),7))##
+		#set($sidebar1 = $string.substring($sidebar1, $startSidebar1))##
+	#end
+	#set($sidebar1 = $sidebar1.trim())##
+#else##
+	#set($sidebar1 = "")##
+#end
+#if($content.sidebar3 && $content.sidebar3.trim() != "")##
+	#set($sidebar3 = $content.sidebar3.trim())##
+#else##
+	#set($sidebar3 = "")##
+#end
+## Check if comments should be displayed and get comment count
+#set($disableComments = false)##
+## Turn comments off per column HashMap
+## HashMap values: key = columnist id, value = columnist kicker
+## If value is blank or if the columnist only writes one type of column and the value is the column kicker, then comments will be 
+## completely removed for columnist
+##
+#set($colCommentsHashMap = $util.newHashMap)##
+## Norm - all columns
+#set($foo = $colCommentsHashMap.put("127011",""))##
+## Heidi Knapp Rinella - Taste of the Town
+#set($foo = $colCommentsHashMap.put("127226","TASTE OF THE TOWN"))##
+##
+#if($colCommentsHashMap.containsKey("$colCatObject.id"))##
+	#set($colCommentsTitle = $colCommentsHashMap.get("$colCatObject.id"))##
+	#if($colCommentsTitle == "" || $string.toUpperCase($colCommentsTitle) == $string.toUpperCase($content.kicker))##
+			#set($disableComments = true)##
+	#end
+#end
+#if($content.commentsOff)##
+	#set($disableComments = true)##
+#end
+#if(!$disableComments)##
+	$string.trim($cms.template("Remove Duplicate Comments"))##
+#end
+##
+########################################################################################################
+## Related Content
+########################################################################################################
+## Array of excluded content types from Related Content
+#set($excludeContentTypes = $util.newArrayList)##
+#set($foo = $excludeContentTypes.add("Media - Bundled Multimedia"))##
+#set($foo = $excludeContentTypes.add("Media - Podcast"))##
+##
+#set($relatedContentTypes = $util.newArrayList)##
+#set($foo = $relatedContentTypes.add("News Story"))##
+#set($foo = $relatedContentTypes.add("Blog"))##
+#set($foo = $relatedContentTypes.add("Media - Video"))##
+#set($foo = $relatedContentTypes.add("Media - Slideshow"))##
+#set($foo = $relatedContentTypes.add("Media - AP"))##
+#set($foo = $relatedContentTypes.add("Media - Third Party Video"))##
+## Setup secondary URL for Special Projects
+##set($foo = $relatedContentTypes.add("Media - Special Projects"))##
+##set($foo = $relatedContentTypes.add("Media - Audio"))##
+##
+## HashMap of media types to use in Extra Media
+#set($mediaContentTypes = $util.newHashMap)##
+#set($foo = $mediaContentTypes.put("Media - Video", "video"))##
+#set($foo = $mediaContentTypes.put("Media - Slideshow", "check-type"))##
+#set($foo = $mediaContentTypes.put("Media - AP", "check-type"))##
+#set($foo = $mediaContentTypes.put("Media - Third Party Video", "check-type"))##
+## Setup secondary URL for Special Projects
+##set($foo = $mediaContentTypes.put("Media - Special Projects", "interactive"))##
+##set($foo = $mediaContentTypes.put("Media - Audio", "audio"))##
+##
+## Declare related arrays
+#set($usedContent = $util.newArrayList)##
+#set($relatedMedia = $util.newArrayList)##
+#set($relatedColumns = $util.newArrayList)##
+#set($relatedBlogs = $util.newArrayList)##
+#set($relatedContent = $util.newArrayList)##
+##
+## Add current content item to $usedContent
+#set($foo = $usedContent.add($content))##
+##
+#if($colCatObject)##
+	## Get array of columns
+	#set($count = 0)##
+	#set($relatedColumnSearch = $cms.newSearch)##
+	$relatedColumnSearch.addContentType("News Story")##
+	$relatedColumnSearch.setSortBy("-startDate")##
+	$relatedColumnSearch.pageSize(6)##
+	$relatedColumnSearch.addCategorization($colCatCriteria)##
+	#if($curSection.path == "/living" || $curSection.path == "/neon" || $curSection.path == "/taste")##
+		$relatedColumnSearch.addWSS("/living",false)##
+		$relatedColumnSearch.addWSS("/neon",false)##
+		$relatedColumnSearch.addWSS("/taste",false)##
+	#else##
+		$relatedColumnSearch.addWSS($curSection,false)##	
+	#end
+	#foreach($result in $relatedColumnSearch.execute)##
+		#if($result.id > 0)##
+			#set($targetFound = false)##
+			#foreach($target in $result.contentTargets)##
+				#if(!$targetFound && !$target.isDead())##
+					#set($targetFound = true)##
+					#set($resultItem = $cms.content($result.id, $target.path))##
+				#end
+			#end
+		#else##
+			#set($resultItem = false)##
+		#end	
+		#if($resultItem && !$usedContent.contains($resultItem) && $resultItem != $content)##
+			#set($count = $math.add($count,1))##
+			#if($count <= 5)##
+				#set($foo = $relatedColumns.add($resultItem))##
+				#set($foo = $usedContent.add($resultItem))##
+			#end
+		#end
+	#end
+	##
+	## Get array of blogs
+	#set($relatedBlogSearch = $cms.newSearch)##
+	$relatedBlogSearch.addContentType("Blog")##
+	$relatedBlogSearch.setSortBy("-startDate")##
+	$relatedBlogSearch.pageSize(5)##
+	$relatedBlogSearch.addCategorization($colCatCriteria)##
+	#foreach($result in $relatedBlogSearch.execute)##
+		#if($result.id > 0)##
+			#set($targetFound = false)##
+			#foreach($target in $result.contentTargets)##
+				#if(!$targetFound && !$target.isDead())##
+					#set($targetFound = true)##
+					#set($resultItem = $cms.content($result.id, $target.path))##
+				#end
+			#end
+		#else##
+			#set($resultItem = false)##
+		#end
+		#if($resultItem && !$usedContent.contains($resultItem) && $resultItem != $content)##
+			#set($foo = $relatedBlogs.add($resultItem))##
+			#set($foo = $usedContent.add($resultItem))##
+		#end
+	#end
+#end
+## Add Topic items to related
+#if($topicCatArray.size() > 0)##
+	#set($topicPageSearch = $cms.newSearch)##
+	$topicPageSearch.pageSize(10)##
+	##$topicPageSearch.addContentType("Topic Page")##
+	$topicPageSearch.addContentType("Hot Topics")##
+	$topicPageSearch.addContentType("Landing Page")##
+	$topicPageSearch.addCategorization($cms.getCategorization($topicCatSetIDArray,$topicCatIDArray,false))##
+	$topicPageSearch.addWSS("/hottopics",true)##
+	## One off - Politics is a Landing page
+	$topicPageSearch.addWSS("/politics")##
+	#foreach($result in $topicPageSearch.execute)##
+		#if($relatedContent.size() < 10)##
+			#if($result.id > 0)##
+				#set($targetFound = false)##
+				#foreach($target in $result.contentTargets)##
+					#if(!$targetFound && !$target.isDead())##
+						#set($targetFound = true)##
+						#set($topicPage = $cms.content($result.id, $target.path))##
+					#end
+				#end
+			#else##
+				#set($topicPage = false)##
+			#end
+			#if($topicPage && !$usedContent.contains($topicPage))##
+				#set($foo = $relatedContent.add($topicPage))##
+				#set($foo = $usedContent.add($topicPage))##
+			#end	
+		#end
+	#end
+#end
+##
+## Get items from Related Content field (linked content)
+#foreach($linkedID in $content.linkedContent("relatedContent"))##
+	#if($relatedContent.size() < 10)##
+		#set($targetFound = false)##
+		#if($cms.content($linkedID, false))##
+			#set($linked = $cms.content($linkedID, false))##
+		#else##
+			#set($linked = false)##
+		#end
+		## Check if item has a Published status
+		#if($linked.id == $linkedID)##
+			#foreach($target in $linked.contentTargets)##
+				#if(!$targetFound && !$target.isDead())##
+					#set($targetFound = true)##
+					#set($linkedContent = $cms.content($linkedID, $target.path))##
+				#end
+			#end
+			#if($linkedContent && !$excludeContentTypes.contains($linkedContent.typeName) && !$usedContent.contains($linkedContent) && $linkedContent != $content)##
+				#if($mediaContentTypes.containsKey($linkedContent.typeName))##
+					#set($foo = $relatedMedia.add($linkedContent))##
+					#set($foo = $usedContent.add($linkedContent))##					
+				#else##
+					#set($foo = $relatedContent.add($linkedContent))##
+					#set($foo = $usedContent.add($linkedContent))##
+				#end
+			#end
+		#end
+	#end
+#end
+##
+## Topical related content items
+#if($topicCatArray.size() > 0 && $relatedContent.size() < 10)##
+	#set($topicRelatedSearch = $cms.newSearch)##
+	$topicRelatedSearch.setSortBy("-startDate")##
+	$topicRelatedSearch.pageSize($math.add(11,$relatedContent.size()))##
+	#foreach($contentType in $relatedContentTypes)##
+		$topicRelatedSearch.addContentType($contentType)##
+	#end
+	$topicRelatedSearch.addCategorization($cms.getCategorization($topicCatSetIDArray,$topicCatIDArray,false))##
+	#foreach($result in $topicRelatedSearch.execute)##
+		#if($relatedContent.size() < 10)##
+			#if($result.id > 0)##
+				#set($targetFound = false)##
+				#foreach($target in $result.contentTargets)##
+					#if(!$targetFound && !$target.isDead())##
+						#set($targetFound = true)##
+						#set($resultItem = $cms.content($result.id, $target.path))##
+					#end
+				#end
+			#else##
+				#set($resultItem = false)##
+			#end
+			#if($resultItem && !$usedContent.contains($resultItem) && $resultItem != $content)##
+				#set($foo = $relatedContent.add($resultItem))##
+				#set($foo = $usedContent.add($resultItem))##
+			#end	
+		#end
+	#end
+#end
+##
+## Keyword search for related content if the number of content items has not reached 10
+#if($relatedContent.size() < 10)##
+	#if($content.metadata && $content.metadata != "")##
+		#set($relatedSearchKeywords = "${keywords},${title}")##
+	#else##
+		#set($relatedSearchKeywords = $title)##
+	#end
+	#set($keywordRelatedSearch = $cms.newSearch)##
+	$keywordRelatedSearch.addKeywords($relatedSearchKeywords)
+	$keywordRelatedSearch.boost("metadata", 10)##
+	$keywordRelatedSearch.boost("title", 10)##
+	$keywordRelatedSearch.pageSize($math.add(12,$relatedContent.size()))##
+	#foreach($contentType in $relatedContentTypes)##
+		$keywordRelatedSearch.addContentType($contentType)##
+	#end
+	#foreach($result in $util.sort($keywordRelatedSearch.execute,"-startDate"))##
+		#if($relatedContent.size() < 10)##
+			#if($result.id > 0)##
+				#set($targetFound = false)##
+				#foreach($target in $result.contentTargets)##
+					#if(!$targetFound && !$target.isDead())##
+						#set($targetFound = true)##
+						#set($resultItem = $cms.content($result.id, $target.path))##
+					#end
+				#end
+			#else##
+				#set($resultItem = false)##
+			#end
+			#if($resultItem && !$excludeContentTypes.contains($resultItem.typeName) && !$usedContent.contains($resultItem) && $resultItem != $content)##
+				#set($foo = $relatedContent.add($resultItem))##
+				#set($foo = $usedContent.add($resultItem))##
+			#end
+		#end
+	#end
+#end
+## Setup metadata
+#if($content.leadImage)##
+	#set($imgObj = $content.leadImage)##
+	#set($metaImgFull = $imgObj.url)##
+	$string.trim($cms.template("Meta Image URL"))##
+#end
+#if(!$metaImg)##
+	#foreach($imgObj in $imagesArray)##
+		#if(!$metaImg)##
+			#set($metaImgFull = $imgObj.url)##
+			$string.trim($cms.template("Meta Image URL"))##
+		#end
+	#end
+#end
+#if(!$metaImg)##
+	#set($metaImgFull = false)##
+#end
+#if(!$metaMedium || $metaMedium == "")
+	#set($metaMedium = "news")##
+#end
+#*
+<b>Debug:</b><br /><br />
+\$colCatObject - $colCatObject<br /><br />
+\$topicCatArray - $topicCatArray<br /><br />
+\$imagesArray.size() - $imagesArray.size()<br /><br />
+\$leadMediaType - $leadMediaType<br /><br />
+\$combineImages - $combineImages<br /><br />
+\$keywordsArray - $keywordsArray<br /><br />
+\$title - $title<br /><br />
+\$corrections - $corrections<br /><br />
+\$byline - $byline<br /><br />
+\$posted - $posted<br /><br />
+\$updated - $updated<br /><br />
+\$body - $body<br /><br />
+\$columnist - $columnist<br /><br />
+\$columnistName - $columnistName<br /><br />
+\$columnistImage - $columnistImage<br /><br />
+\$columnistURL - $columnistURL<br /><br />
+\$sidebar1 - $sidebar1<br /><br />
+\$sidebar3 - $sidebar3<br /><br />
+\$disableComments - $disableComments<br /><br />
+\$isPromotional - $isPromotional<br /><br />
+\$commentCount - $commentCount<br /><br />
+\$relatedMedia - $relatedMedia<br />
+#foreach($item in $relatedMedia)##
+	- $item.title<br />
+#end
+<br />
+\$relatedColumns - $relatedColumns<br />
+#foreach($item in $relatedColumns)##
+	- $item.title<br />
+#end
+<br />
+\$relatedBlogs - $relatedBlogs<br />
+#foreach($item in $relatedBlogs)##
+	- $item.title<br />
+#end
+<br />
+\$relatedContent - $relatedContent<br />
+#foreach($item in $relatedContent)##
+	- $item.title ($item.startDate)<br />
+#end
+<br />
+*#

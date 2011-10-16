@@ -1,0 +1,169 @@
+########################################################################################################
+## XML for SlideshowPro players that display photos and videos
+## 
+## The XML must have a 'type' parameter with the media type and '-id' to for a specific content item on 
+## players that do not display multiple media content items. The parameters 'topic' or 'section' can 
+## be optionally added multiple media players to specify a specific topic or section category.
+## 
+## Types:
+## video-std
+## A single 'Media - Video' content item for a standard video type. The content ID for the video must 
+## be included.
+##
+## video-hd
+## A single 'Media - Video' content item for an HD video type. The content ID for the video must be 
+## included.
+##
+## slideshow
+## A single 'Media - Slideshow' content item. The content ID for the slideshow must be included.
+##
+## multi-video
+## Displays multiple 'Media - Video' content items for a player and playlist.
+##
+## multi-media
+## Displays multiple media content items (video, slideshows, audio, AP, special projects and third party 
+## video) for a player and playlist. The term 'multimedia' will also be recognized.
+##
+## -id
+## The content item ID for players displaying a specific content item.
+##
+## -vpsize
+## For video and the multi content item players, add a -vpsize to give the width and height dimensions 
+## (ex: 420x236) of the vidpreview image that appears in the player. This is dependent on the player 
+## size. Default will use the full sized image. 
+##
+## -topic
+## For multiple media players, this can assign a specific Topic category ID. At the moment only one ID
+## can be added. (Optional)
+##
+## -section
+## For multiple media players, this can assign a specific Section Assignment category ID. At the moment
+## only one ID can be added. (Optional)
+##
+## Examples:
+## ?type=multi-media-vpsize-420x236
+## ?type=multi-media-vpsize-420x236-topic-884414
+## ?type=multi-media-vpsize-420x236-section-178562
+## ?type=multi-media-vpsize-420x236-topic-884414-section-178562
+## ?type=multi-video-vpsize-420x236
+## ?type=multi-video-vpsize-420x236-topic-884414
+## ?type=multi-video-vpsize-420x236-section-178562
+## ?type=multi-video-vpsize-420x236-topic-884414-section-178562
+## ?type=video-std-id-6429712-vpsize-420x236 
+## ?type=slideshow-id-6429712
+##
+########################################################################################################
+## Setup template
+########################################################################################################
+##
+$string.trim($cms.template("RJ - XML Setup - media-ssp.xml"))##
+##
+########################################################################################################
+## Produce XML output
+########################################################################################################
+##
+#if($displayXML)##
+<?xml version="1.0" encoding="UTF-8"?>
+<gallery>
+##<album #if($albumTitle)title="$title"#end #if($albumDescription)description="$description"#end #if($albumLgpath && $lgpath)lgpath="$lgpath"#end #if($albumTnpath && $tnpath)tnpath="$tnpath"#end>
+	<album#if($albumTitle) title="$title"#end#if($albumDescription) description="$description"#end>
+##
+## Single video player
+#if($paramType == "video-std" || $paramType == "video-hd")##
+##
+		<img #if($videoSrc)src="$videoURL"#end #if($vidPreview)#if($vpWidth && $vpHeight)vidpreview="http://${cms.mediaDomain}/images/${vpWidth}*${vpHeight}/$prevImage.filename"#elseif(!$vpWidth && !$vpHeight)vidpreview="$prevImage.url"#end#end />
+##
+## Single slideshow player
+#elseif($paramType == "slideshow")##
+##
+#set($lgResizeWidthDefault = $lgResizeWidth)##
+#set($lgResizeHeightDefault = $lgResizeHeight)##
+#foreach($image in $slideshowArray)##
+#if($velocityCount > 1)##
+#set($lgResizeWidth = $lgResizeWidthDefault)##
+#set($lgResizeHeight = $lgResizeHeightDefault)##
+#end
+#set($imageWidth = $image.width)##
+#set($imageHeight = $image.height)##
+#if($imageWidth > $lgResizeWidth)##
+#set($resizeDiff = $math.divide($lgResizeWidth, $imageWidth))##
+#set($lgResizeHeight = $math.round($math.multiply($imageHeight, $resizeDiff)))##
+#else##
+#set($lgResizeWidth = $imageWidth)##
+#set($lgResizeHeight = $imageHeight)##
+#end
+#if($imageWidth > $tnResizeWidth)##
+#set($resizeDiff = $math.divide($tnResizeWidth, $imageWidth))##
+#set($tnResizeHeight = $math.round($math.multiply($imageHeight, $resizeDiff)))##
+#else##
+#set($tnResizeWidth = $imageWidth)##
+#set($tnResizeHeight = $imageHeight)##
+#end
+## Slideshow image caption
+#if($image.caption && $image.caption != "")##
+#set($itemCaption = true)##
+#set($caption = $util.encode.xml($image.caption))##
+#end
+## Slideshow image credit
+#if($image.credit && $image.credit != "")##
+#set($itemCredit = true)##
+#set($credit = " $util.encode.xml($image.credit)")##
+#end
+		<img src="http://${cms.mediaDomain}/images/${lgResizeWidth}*${lgResizeHeight}/$image.filename" tn="http://${cms.mediaDomain}/images/${tnResizeWidth}*${tnResizeHeight}/$image.filename" #if($albumTitle)title="$title"#end #if($itemCaption || $itemCredit)caption="$!{caption}$!{credit}"#end />
+#end
+##
+## Multiple content items player
+#elseif($paramType == "multi-video" || $paramType == "multi-media" || $paramType == "multi-media")##
+##
+#foreach($media in $mediaArray)##
+## Media title
+#set($title = $util.encode.xml($media.title))##
+#if($title && $title != "")##
+#set($mediaTitle = true)##
+#end
+## Media caption (description)
+#set($caption = $util.encode.xml($string.trim($util.text($media.body))))##
+#if($caption && $caption != "")##
+#set($mediaCaption = true)##
+#end
+## Media preview image
+#if($util.type($media.prevImage) == "MediaPlacement")##
+#set($prevImage = $media.prevImage)##
+#elseif($util.type($media.prevImage) == "ArrayList")##
+#foreach($item in $media.prevImage)##
+#if($velocityCount == 1)##
+#set($prevImage = $item)##
+#end
+#end
+#end
+#if($prevImage)##
+#set($vidPreview = true)##
+#set($prevImageWidth = $prevImage.width)##
+#set($prevImageHeight = $prevImage.height)##
+#if($prevImageWidth > $tnResizeWidth)##
+#set($resizeDiff = $math.divide($tnResizeWidth, $prevImageWidth))##
+#set($tnResizeHeight = $math.round($math.multiply($prevImageHeight, $resizeDiff)))##
+#else##
+#set($tnResizeWidth = $prevImageWidth)##
+#set($tnResizeHeight = $prevImageHeight)##
+#end
+#end
+## Media URL
+#if($media.typeName == "Media - Video")##
+#set($mediaURL = $util.encode.xml($media.standardVideoURL))##
+#else##
+#set($mediaURL = "http://${cms.mediaDomain}/images/${vpWidth}*${vpHeight}/$prevImage.filename")##
+#end
+#if($mediaURL && $mediaURL != "")##
+#set($mediaSrc = true)##
+#end
+## Media page URL
+#set($contentURL = $util.encode.xml($media.url))##
+#if($contentURL && $contentURL != "")##
+		<img #if($mediaSrc)src="$mediaURL"#end link="$contentURL" #if($vidPreview)#if($vpWidth && $vpHeight)vidpreview="http://${cms.mediaDomain}/images/${vpWidth}*${vpHeight}/$prevImage.filename"#elseif(!$vpWidth && !$vpHeight)vidpreview="$prevImage.url"#end tn="http://${cms.mediaDomain}/images/${tnResizeWidth}*${tnResizeHeight}/$prevImage.filename"#end #if($mediaTitle)title="$title"#end #if($mediaCaption)caption="$caption"#end />
+#end
+#end
+#end
+	</album>
+</gallery>
+#end

@@ -1,0 +1,61 @@
+#########################################################################################################
+## RJ - Random helper template
+#########################################################################################################
+## Description
+## A helper template that produces an ArrayList of random numbers, letters or an alphanumeric mix. The 
+## numeric range is between 1 and a specified number. Duplicate results will not be returned. 
+#########################################################################################################
+## Input variables:
+## $randomType - can be either "numeric", "alphabetic" or "alphanumeric" (default "numeric")
+## $maxNum - for the numeric type this represents the max random numeric value  that can be returned and 
+## for alphabetic or alphanumeric this represents the character length of string returned (default 10)
+## $numResults - number of random results to return in ArrayList (default 1)
+##
+## Output variable: $randomArray (ArrayList)
+#########################################################################################################
+#set($randomArray = $util.newArrayList)##
+#if(!$randomType || $randomType == "" && $randomType != "numeric" && $randomType != "alphabetic" && $randomType != "alphanumeric")##
+	#set($randomType = "numeric")##
+#end
+#if(!$maxNum || $util.type($maxNum) != "Integer")##
+	#set($maxNum = 10)##
+#end
+#if(!$numResults || $util.type($numResults) != "Integer")##
+	#set($numResults = 1)##
+#end
+#set($count = 0)##
+#if($randomType == "numeric")##
+	#foreach($a in [1..$math.multiply($numResults, 10)])##
+		#set($randomDec = $math.random)##
+		#set($randomNum = $math.round($math.multiply($randomDec, $maxNum)))##
+		#if($count < $numResults && !$randomArray.contains($randomNum) && $randomNum != 0)##
+			#set($foo = $randomArray.add($randomNum))##
+			#set($count = $math.add($count, 1))##
+		#end
+	#end
+#else##
+	#set($charArray = $util.newArrayList)##
+	#if($randomType == "alphanumeric")##
+		#foreach($a in [0..9])##
+			#set($foo = $charArray.add($a))##
+		#end
+	#end
+	#if($randomType == "alphabetic" || $randomType == "alphanumeric")##
+		#set($alphaString = "abcdefghijklmnopqrstuvwxyz")##
+		#foreach($a in [0..25])##
+			#set($foo = $charArray.add($string.charAt($alphaString, $a)))##
+		#end
+	#end
+	#foreach($a in [1..$math.multiply($numResults, 2)])##
+		#set($buildString = "")##
+		#foreach($b in [1..$maxNum])##
+			#set($randomDec = $math.random)##
+			#set($randomNum = $math.round($math.multiply($randomDec, $math.subtract($charArray.size(),1))))##
+			#set($buildString = "${buildString}$charArray.get($randomNum)")##
+		#end
+		#if($count < $numResults && !$randomArray.contains($buildString))##
+			#set($foo = $randomArray.add($buildString))##
+			#set($count = $math.add($count, 1))##
+		#end
+	#end
+#end

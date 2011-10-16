@@ -1,0 +1,460 @@
+#if(!$domainString || $domainString == "")##
+	#set($domainString = "http://${cms.envHost}$cms.domain")##
+#end
+#set($quote = $util.encode.unHTML("&quot;"))##
+#set($onStatewide = false)##
+#set($onLocal = false)##
+#set($county = false)##
+#set($questionsHashMap = $util.newHashMap)##
+#set($JSONurl = "http://projects.reviewjournal.com/data/results-all.json")##
+#set($strJSON = $util.getURLWithTimeout($JSONurl, 20))##
+#set($objJSON = $jsonParser.parseJSON($strJSON))##
+#set($arNames = $objJSON.names())##
+#if($arNames.length() == 1)##
+#### First level of JSON (base field - "race") ####################################################################
+	#set($baseName = $arNames.get(0))##
+	#set($arJSONRaces = $objJSON.get($baseName))##
+	#foreach($arJSONRacesKey in [0..$math.subtract($arJSONRaces.length(),1)])##
+#### Second level of JSON (array of races) #####################################################################
+		#set($objJSONRace = $arJSONRaces.get($arJSONRacesKey))##
+		#if(!$objJSONRace.isNull("title") && $objJSONRace.get("title") != "")##
+			##
+			## Create HashMap of ballot questions to sort to the bottom
+			#if(!$objJSONRace.isNull("statewide") && !$objJSONRace.getBoolean("statewide") && $objJSONRace.getBoolean("ballot-question"))##
+				#set($foo = $questionsHashMap.put($objJSONRace.get("title"),$objJSONRace))##
+			#else##			
+				#if(!$objJSONRace.isNull("candidate") && $util.type($objJSONRace.get("candidate")) == "JSONArray")##
+					#set($arJSONCandidates = $objJSONRace.get("candidate"))##
+					#if($arJSONCandidates.length() > 0)##
+########################################################################################################
+## Statewide Races
+########################################################################################################
+						#if(!$onLocal && $objJSONRace.getBoolean("statewide"))##
+							#if(!$onStatewide)##
+								#set($onStatewide = $objJSONRace.getBoolean("statewide"))##
+							
+						<div id="statewide-results">
+							<h4 class="results-title">State Results</h4>
+							<ul class="races">
+							#end
+							#if(!$objJSONRace.isNull("office-type"))##
+								#set($officeType = $objJSONRace.get("office-type"))##
+							#else
+								#set($officeType = "political")##
+							#end
+							#if(!$objJSONRace.isNull("modified"))##
+								#set($dateInput = $util.parseDate($objJSONRace.get("modified"),"E, dd MMM yyyy HH:mm:ss z"))##
+								#set($styleMeridiem = true)##
+								#set($dateFormats = $util.newHashMap)##
+								#set($foo = $dateFormats.put("sameDay","'Updated:' h:mm a"))##
+								#set($foo = $dateFormats.put("default","'Updated:' MMM. d 'at' h:mm a"))##
+								$string.trim($cms.template("Format Date/Time "))##
+								#set($raceModified = $dateOutput)##
+							#else
+								#set($raceModified = false)##
+							#end
+							#if(!$objJSONRace.isNull("id"))##
+								#set($raceID = $objJSONRace.get("id"))##
+								#set($raceIDSelector = " id=${quote}${officeType}-race-${raceID}${quote}")##
+							#else
+								#set($raceID = false)##
+								#set($raceIDSelector = "")##
+							#end
+		
+								<li${raceIDSelector}>
+									<h3>$!objJSONRace.get("title")</h3>
+									<p class="precincts">Precincts Reporting: $!objJSONRace.get("total-precincts-percent")</p>
+									<p class="updated">$!raceModified</p>
+									<div class="clear"></div>
+									<ol class="candidates">
+							#foreach($arJSONCandidatesKey in [0..$math.subtract($arJSONCandidates.length(),1)])##
+#### Third level of JSON (array of candidates) ##################################################################
+								#set($objJSONCandidate = $arJSONCandidates.get($arJSONCandidatesKey))##
+								##
+								#if(!$objJSONCandidate.isNull("id") && $objJSONCandidate.get("id") != "")##
+									#set($candidateID = $objJSONCandidate.get("id"))##
+									#set($candidateIDSelector = " id=${quote}candidate-${candidateID}${quote}")##
+								#else
+									#set($candidateID = false)##
+									#set($candidateIDSelector = "")##
+								#end
+								#if(!$objJSONCandidate.isNull("name") && $objJSONCandidate.get("name") != "")##
+									#set($candidateName = $objJSONCandidate.get("name"))##
+								#else##
+									#set($candidateName = "")##
+								#end
+								#if(!$objJSONCandidate.isNull("modified") && $objJSONCandidate.get("modified") != "")##
+									#set($candidateModified = $util.parseDate($objJSONCandidate.get("modified"),"E, dd MMM yyyy HH:mm:ss z"))##
+								#else
+									#set($candidateModified = false)##
+								#end
+								#if($officeType && $officeType != "" && !$objJSONCandidate.isNull("slug") && !$objJSONCandidate.isNull("candidate-id"))##
+									#if($officeType == "judicial")##
+										#set($judicialText = "${officeType}-")##
+									#else##
+										#set($judicialText = "")##
+									#end
+									#if($objJSONCandidate.get("slug") && $objJSONCandidate.get("slug") != "")##
+										#set($candidateSlug = $objJSONCandidate.get("slug"))##
+										#set($candidateSlugSelector = " class=${quote}${candidateSlug}${quote}")##
+									#else##
+										#set($candidateSlug = false)##
+										#set($candidateSlugSelector = "")##
+									#end
+									#set($profileURL = "${domainString}/politics/candidates/${util.date('yyyy')}/${judicialText}office/${candidateSlug}-profile-${objJSONCandidate.get('candidate-id')}")##
+								#else##
+									#set($profileURL = false)##
+									#set($candidateSlug = false)##
+									#set($candidateSlugSelector = "")##
+								#end
+								#if(!$objJSONCandidate.isNull("incumbent") && $objJSONCandidate.getBoolean("incumbent"))##
+									#set($candidateIncumbent = $objJSONCandidate.getBoolean("incumbent"))##
+								#else##
+									#set($candidateIncumbent = false)##						
+								#end
+								#if(!$objJSONCandidate.isNull("winner") && $objJSONCandidate.getBoolean("winner"))##
+									#set($candidateWinner = $objJSONCandidate.getBoolean("winner"))##
+								#else##
+									#set($candidateWinner = false)##						
+								#end
+								#if(!$objJSONCandidate.isNull("party") && $objJSONCandidate.get("party") != "")##
+									#set($candidateParty = $objJSONCandidate.get("party"))##
+									#set($candidatePartyText = ", $candidateParty")##
+								#else
+									#set($candidateParty = false)##
+									#set($candidatePartyText = "")##
+								#end
+								#if(!$objJSONCandidate.isNull("total-vote-percent") && $objJSONCandidate.get("total-vote-percent") != "")##
+									#set($candidateVotePercent = $objJSONCandidate.get("total-vote-percent"))##
+								#else
+									#set($candidateVotePercent = "0%")##
+								#end
+								#if(!$objJSONCandidate.isNull("total-vote") && $objJSONCandidate.get("total-vote") != "")##
+									#set($candidateTotalVote = $objJSONCandidate.get("total-vote"))##
+								#else
+									#set($candidateTotalVote = 0)##
+								#end
+								#if(!$objJSONCandidate.isNull("county") && $util.type($objJSONCandidate.get("county")) == "JSONArray")##
+									#set($arJSONCounties = $objJSONCandidate.get("county"))##
+									#if($candidateName && $candidateName != "")##
+		
+										<li$!{candidateIDSelector}$!{candidateSlugSelector}>
+											<div class="total-results">
+												<p class="candidate-name"><span class="expand">#if($candidateWinner)<img src="http://media.lvrj.com/images/checkbox-orange-10px.png" class="winner" alt="" />#end#if($candidateIncumbent)<span class="incumbent">*</span>#end$!{candidateName}${candidatePartyText}</span>#if($profileURL) (<a href="${profileURL}">profile</a>) #end</p>
+												<p class="results"><span class="vote-count">Total votes: $!{candidateTotalVote}</span><span class="vote-percent"><span style="width: ${candidateVotePercent};"></span></span>${candidateVotePercent}</p>
+											</div>
+											<ol class="county-results">
+										#foreach($arJSONCountiesKey in [0..$math.subtract($arJSONCounties.length(),1)])##
+#### Fourth level of JSON (array of counties per candidate) ########################################################
+											#set($objJSONCounty = $arJSONCounties.get($arJSONCountiesKey))##
+											#if(!$objJSONCounty.isNull("name") && $objJSONCounty.get("name") != "")##
+												#set($countyName = $objJSONCounty.get("name"))##
+											#else##
+												#set($countyName = "")##
+											#end
+											#if(!$objJSONCounty.isNull("total-vote-percent") && $objJSONCounty.get("total-vote-percent") != "")##
+												#set($countyVotePercent = $objJSONCounty.get("total-vote-percent"))##
+											#else
+												#set($countyVotePercent = "0%")##
+											#end
+											#if(!$objJSONCounty.isNull("total-vote") && $objJSONCounty.get("total-vote") != "")##
+												#set($countyTotalVote = $objJSONCounty.get("total-vote"))##
+											#else
+												#set($countyTotalVote = 0)##
+											#end
+											#if($countyName && $countyName != "")##
+		
+												<li>
+													<p class="county-name">$!{countyName}</p>
+													<p class="results"><span class="vote-count">Votes: $!{countyTotalVote}</span><span class="vote-percent"><span style="width: ${countyVotePercent};"></span></span>${countyVotePercent}</p>
+												</li>
+											#end
+										#end
+									#end
+								
+											</ol>
+										</li>
+								#end
+							#end
+							
+									</ol>
+								</li>
+########################################################################################################
+## County Races
+########################################################################################################						
+						#elseif(!$objJSONRace.getBoolean("statewide"))##
+							#set($objJSONCandidate = $arJSONCandidates.get(0))##
+							#set($arJSONCounties = $objJSONCandidate.get("county"))##
+							#set($objJSONCounty = $arJSONCounties.get(0))##
+							#if(!$objJSONCounty.isNull("name") && $objJSONCounty.get("name") != "")##
+								#set($countyName = $objJSONCounty.get("name"))##
+							#else##
+								#set($countyName = "")##
+							#end
+							#if(!$onLocal)##
+								#set($onLocal = true)##
+								#set($onStatewide = false)##
+		
+							</ul>
+						</div>						
+						<div id="county-results">
+							<h4 class="results-title">County Results</h4>
+							<ol class="counties">					
+							#elseif($onLocal && $county && $county != $countyName)##
+								#if(!$questionsHashMap.isEmpty)##
+									#set($questionTitles = $questionsHashMap.keySet)##
+									#foreach($bqTitle in $util.sort($questionTitles, "toString"))##
+										#set($objJSONQuestion = $questionsHashMap.get($bqTitle))##
+										#set($arJSONAnswers = $objJSONQuestion.get("candidate"))##
+										#if($arJSONAnswers.length() > 0)##
+#### Start Ballot Questions Sort ##################################################################
+											#if(!$objJSONQuestion.isNull("office-type") && $objJSONQuestion.get("office-type") != "")##
+												#set($officeType = $objJSONQuestion.get("office-type"))##
+											#else
+												#set($officeType = "political")##
+											#end
+											#if(!$objJSONQuestion.isNull("id") && $objJSONQuestion.get("id") != "")##
+												#set($raceID = $objJSONQuestion.get("id"))##
+												#set($raceIDSelector = " id=${quote}${officeType}-race-${raceID}${quote}")##
+											#else
+												#set($raceID = false)##
+												#set($raceIDSelector = "")##
+											#end
+											#if(!$objJSONQuestion.isNull("modified") && $objJSONQuestion.get("modified") != "")##
+												#set($dateInput = $util.parseDate($objJSONQuestion.get("modified"),"E, dd MMM yyyy HH:mm:ss z"))##
+												#set($styleMeridiem = true)##
+												#set($dateFormats = $util.newHashMap)##
+												#set($foo = $dateFormats.put("sameDay","'Updated:' h:mm a"))##
+												#set($foo = $dateFormats.put("default","'Updated:' MMM. d 'at' h:mm a"))##
+												$string.trim($cms.template("Format Date/Time "))##
+												#set($raceModified = $dateOutput)##
+											#else
+												#set($raceModified = false)##
+											#end
+					
+													<li$!{raceIDSelector}>
+														<h3>$!{objJSONQuestion.get("title")}</h3>
+														<p class="precincts">Precincts Reporting: $!{objJSONQuestion.get("total-precincts-percent")}</p>
+														<p class="updated">$!{raceModified}</p>
+														<div class="clear"></div>
+														<ol class="candidates">
+					
+											#foreach($arJSONAnswersKey in [0..$math.subtract($arJSONAnswers.length(),1)])##
+#### BALLOT QUESTIONS ONLY - Third level of JSON (array of candidates) ##################################################################
+												#set($objJSONAnswer = $arJSONAnswers.get($arJSONAnswersKey))##
+												#if(!$objJSONAnswer.isNull("id") && $objJSONAnswer.get("id") != "")##
+													#set($answerID = $objJSONAnswer.get("id"))##
+													#set($answerIDSelector = " id=${quote}candidate-${answerID}${quote}")##
+												#else
+													#set($answerID = false)##
+													#set($answerIDSelector = "")##
+												#end
+												#if(!$objJSONAnswer.isNull("name") && $objJSONAnswer.get("name") != "")##
+													#set($answerName = $objJSONAnswer.get("name"))##
+												#else##
+													#set($answerName = "")##
+												#end
+												#if($officeType && $officeType != "" && !$objJSONAnswer.isNull("slug") && !$objJSONAnswer.isNull("candidate-id"))##
+													#if($officeType == "judicial")##
+														#set($judicialText = "${officeType}-")##
+													#else##
+														#set($judicialText = "")##
+													#end
+													#if($objJSONAnswer.get("slug") && $objJSONAnswer.get("slug") != "")##
+														#set($answerSlug = $objJSONAnswer.get("slug"))##
+														#set($answerSlugSelector = " class=${quote}${answerSlug}${quote}")##
+													#else##
+														#set($answerSlug = false)##
+														#set($answerSlugSelector = "")##
+													#end
+													#set($profileURL = "${domainString}/politics/candidates/${util.date('yyyy')}/${judicialText}office/${answerSlug}-profile-${objJSONCandidate.get('candidate-id')}")##
+												#else##
+													#set($profileURL = false)##
+													#set($answerSlug = false)##
+													#set($answerSlugSelector = "")##
+												#end
+												#if(!$objJSONAnswer.isNull("incumbent") && $objJSONAnswer.getBoolean("incumbent"))##
+													#set($answerIncumbent = $objJSONAnswer.getBoolean("incumbent"))##
+												#else##
+													#set($answerIncumbent = false)##						
+												#end
+												#if(!$objJSONAnswer.isNull("winner") && $objJSONAnswer.getBoolean("winner"))##
+													#set($answerWinner = $objJSONAnswer.getBoolean("winner"))##
+												#else##
+													#set($answerWinner = false)##						
+												#end
+												#if(!$objJSONAnswer.isNull("party") && $objJSONAnswer.get("party") != "")##
+													#set($answerParty = $objJSONAnswer.get("party"))##
+													#set($answerPartyText = ", $answerParty")##
+												#else
+													#set($answerParty = false)##
+													#set($answerPartyText = "")##
+												#end
+												#if(!$objJSONAnswer.isNull("total-vote-percent") && $objJSONAnswer.get("total-vote-percent") != "")##
+													#set($answerVotePercent = $objJSONAnswer.get("total-vote-percent"))##
+												#else
+													#set($answerVotePercent = "0%")##
+												#end
+												#if(!$objJSONAnswer.isNull("total-vote") && $objJSONAnswer.get("total-vote") != "")##
+													#set($answerTotalVote = $objJSONAnswer.get("total-vote"))##
+												#else
+													#set($answerTotalVote = 0)##
+												#end
+												#if($answerName && $answerName != "")##
+												
+															<li$!{answerIDSelector}$!{answerSlugSelector}>
+																<p class="candidate-name">#if($answerWinner)<img src="http://media.lvrj.com/images/checkbox-orange-10px.png" class="winner" alt="" />#end#if($answerIncumbent)<span class="incumbent">*</span>#end$!{answerName}${answerPartyText}#if($profileURL) (<a href="${profileURL}">profile</a>) #end</p>
+																<p class="results"><span class="vote-count">Total votes: $!{answerTotalVote}</span><span class="vote-percent"><span style="width: ${answerVotePercent};"></span></span>${answerVotePercent}</p>
+															</li>							
+												#end
+												#if($arJSONAnswersKey == $math.subtract($arJSONAnswers.length(),1))##
+												
+														</ol>
+													</li>
+												#end	
+											#end
+#### End Ballot Questions Sort ##################################################################
+										#end
+									#end												
+								#end
+								#set($questionsHashMap = $util.newHashMap)##
+		
+									</ol>
+								</li>
+							#end
+							## Get county info
+							#if($objJSONCandidate.get("county").length() <= 2 && $util.type($objJSONCandidate.get("county")) == "JSONArray")##
+								#if(!$county || $county != $countyName)##
+									#set($county = $countyName)##
+									#set($countyClass = $string.toLowerCase($string.replaceAll($county," ","-")))##
+									#if($countyClass == "clark-county")##
+										#set($selectClass = " select")##
+										#set($selectStyle = " style=${quote}display: block;${quote}")##
+									#else##
+										#set($selectClass = "")##
+										#set($selectStyle = "")##
+									#end
+										
+								<li id="${countyClass}">
+									<h4 class="county-name expand${selectClass}">${county}</h4>
+									<ol class="races"${selectStyle}>
+								#end
+								##
+								#if(!$objJSONRace.isNull("office-type") && $objJSONRace.get("office-type") != "")##
+									#set($officeType = $objJSONRace.get("office-type"))##
+								#else
+									#set($officeType = "political")##
+								#end
+								#if(!$objJSONRace.isNull("id") && $objJSONRace.get("id") != "")##
+									#set($raceID = $objJSONRace.get("id"))##
+									#set($raceIDSelector = " id=${quote}${officeType}-race-${raceID}${quote}")##
+								#else
+									#set($raceID = false)##
+									#set($raceIDSelector = "")##
+								#end
+								#if(!$objJSONRace.isNull("modified") && $objJSONRace.get("modified") != "")##
+									#set($dateInput = $util.parseDate($objJSONRace.get("modified"),"E, dd MMM yyyy HH:mm:ss z"))##
+									#set($styleMeridiem = true)##
+									#set($dateFormats = $util.newHashMap)##
+									#set($foo = $dateFormats.put("sameDay","'Updated:' h:mm a"))##
+									#set($foo = $dateFormats.put("default","'Updated:' MMM. d 'at' h:mm a"))##
+									$string.trim($cms.template("Format Date/Time "))##
+									#set($raceModified = $dateOutput)##
+								#else
+									#set($raceModified = false)##
+								#end
+		
+										<li$!{raceIDSelector}>
+											<h3>$!{objJSONRace.get("title")}</h3>
+											<p class="precincts">Precincts Reporting: $!{objJSONRace.get("total-precincts-percent")}</p>
+											<p class="updated">$!{raceModified}</p>
+											<div class="clear"></div>
+											<ol class="candidates">
+		
+								#foreach($arJSONCandidatesKey in [0..$math.subtract($arJSONCandidates.length(),1)])##
+#### Third level of JSON (array of candidates) ##################################################################
+									#set($objJSONCandidate = $arJSONCandidates.get($arJSONCandidatesKey))##
+									#if(!$objJSONCandidate.isNull("id") && $objJSONCandidate.get("id") != "")##
+										#set($candidateID = $objJSONCandidate.get("id"))##
+										#set($candidateIDSelector = " id=${quote}candidate-${candidateID}${quote}")##
+									#else
+										#set($candidateID = false)##
+										#set($candidateIDSelector = "")##
+									#end
+									#if(!$objJSONCandidate.isNull("name") && $objJSONCandidate.get("name") != "")##
+										#set($candidateName = $objJSONCandidate.get("name"))##
+									#else##
+										#set($candidateName = "")##
+									#end
+									#if($officeType && $officeType != "" && !$objJSONCandidate.isNull("slug") && !$objJSONCandidate.isNull("candidate-id"))##
+										#if($officeType == "judicial")##
+											#set($judicialText = "${officeType}-")##
+										#else##
+											#set($judicialText = "")##
+										#end
+										#if($objJSONCandidate.get("slug") && $objJSONCandidate.get("slug") != "")##
+											#set($candidateSlug = $objJSONCandidate.get("slug"))##
+											#set($candidateSlugSelector = " class=${quote}${candidateSlug}${quote}")##
+										#else##
+											#set($candidateSlug = false)##
+											#set($candidateSlugSelector = "")##
+										#end
+										#set($profileURL = "${domainString}/politics/candidates/${util.date('yyyy')}/${judicialText}office/${candidateSlug}-profile-${objJSONCandidate.get('candidate-id')}")##
+									#else##
+										#set($profileURL = false)##
+										#set($candidateSlug = false)##
+										#set($candidateSlugSelector = "")##
+									#end
+									#if(!$objJSONCandidate.isNull("incumbent") && $objJSONCandidate.getBoolean("incumbent"))##
+										#set($candidateIncumbent = $objJSONCandidate.getBoolean("incumbent"))##
+									#else##
+										#set($candidateIncumbent = false)##						
+									#end
+									#if(!$objJSONCandidate.isNull("winner") && $objJSONCandidate.getBoolean("winner"))##
+										#set($candidateWinner = $objJSONCandidate.getBoolean("winner"))##
+									#else##
+										#set($candidateWinner = false)##						
+									#end
+									#if(!$objJSONCandidate.isNull("party") && $objJSONCandidate.get("party") != "")##
+										#set($candidateParty = $objJSONCandidate.get("party"))##
+										#set($candidatePartyText = ", $candidateParty")##
+									#else
+										#set($candidateParty = false)##
+										#set($candidatePartyText = "")##
+									#end
+									#if(!$objJSONCandidate.isNull("total-vote-percent") && $objJSONCandidate.get("total-vote-percent") != "")##
+										#set($candidateVotePercent = $objJSONCandidate.get("total-vote-percent"))##
+									#else
+										#set($candidateVotePercent = "0%")##
+									#end
+									#if(!$objJSONCandidate.isNull("total-vote") && $objJSONCandidate.get("total-vote") != "")##
+										#set($candidateTotalVote = $objJSONCandidate.get("total-vote"))##
+									#else
+										#set($candidateTotalVote = 0)##
+									#end
+									#if($candidateName && $candidateName != "")##
+		
+												<li$!{candidateIDSelector}$!{candidateSlugSelector}>
+													<p class="candidate-name">#if($candidateWinner)<img src="http://media.lvrj.com/images/checkbox-orange-10px.png" class="winner" alt="" />#end#if($candidateIncumbent)<span class="incumbent">*</span>#end$!{candidateName}${candidatePartyText}#if($profileURL) (<a href="${profileURL}">profile</a>) #end</p>
+													<p class="results"><span class="vote-count">Total votes: $!{candidateTotalVote}</span><span class="vote-percent"><span style="width: ${candidateVotePercent};"></span></span>${candidateVotePercent}</p>
+												</li>							
+									#end
+									#if($arJSONCandidatesKey == $math.subtract($arJSONCandidates.length(),1))##
+									
+											</ol>
+										</li>
+									#end	
+								#end
+							#end
+						#end
+					#end
+				#end
+			#end
+		#end	
+	#end
+
+							</ol>
+						</li>	
+					</ol>
+				</div>	
+#end

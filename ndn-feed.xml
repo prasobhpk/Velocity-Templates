@@ -1,0 +1,237 @@
+########################################################################################################
+## ndn-feed.xml - XML feed to publish videos to NDN
+########################################################################################################
+## XML Variables
+########################################################################################################
+## Name of source that should match $paramSource
+#set($feedSource = "ndn")##
+## Get URL parameters
+#set($paramSource = $string.toLowerCase($req.param("source")))##
+#set($paramType = $string.toLowerCase($req.param("type")))##
+#if($paramSource == $feedSource)##
+	#set($domainString = "http://${cms.envHost}$cms.domain")##
+	#set($siteLogoURL = $cms.media("rj-icon-130x120.jpg", "designimages").url)##
+	#set($siteTitle = "Las Vegas Review-Journal")##
+	#set($feedTitle = "NDN Syndication")##
+	## Search page parameters for "full" feed type
+	## Set number of results per page
+	#set($pageSize = 100)##
+	## Set number of pages to search
+	#set($numPages = 20)##
+	## Create a Hash Map of video mime types
+	#set($mimeHashMap = $util.newHashMap)##
+	#set($foo =  $mimeHashMap.put(".mpg","video/mpeg"))##
+	#set($foo =  $mimeHashMap.put(".mpeg","video/mpeg"))##
+	#set($foo =  $mimeHashMap.put(".mp4","video/mp4"))##
+	#set($foo =  $mimeHashMap.put(".ogg","video/ogg"))##
+	#set($foo =  $mimeHashMap.put(".mov","video/quicktime"))##
+	#set($foo =  $mimeHashMap.put(".webm","video/webm"))##
+	#set($foo =  $mimeHashMap.put(".wmv","video/x-ms-wmv"))##
+	#set($foo =  $mimeHashMap.put(".flv","video/x-flv"))##
+	#set($foo =  $mimeHashMap.put(".m4v","video/x-m4v"))##
+	#set($foo =  $mimeHashMap.put(".avi","video/x-msvideo"))##
+	## Create an ArrayList of video items
+	#set($itemsArrayList = $util.newArrayList)##
+	#if($paramType == "publish")##
+		#set($feedDescription = "Feed of new videos to be published in NDN.")##
+		#set($itemsArrayList = $cms.filteredLinks("Media - Video","/multimedia/syndication/ndn",1,20))##
+	#elseif($paramType == "full")##
+		#set($feedDescription = "Feed of all videos without an NDN vid.")##
+		#set($videoSearch = $cms.newSearch)##
+		$videoSearch.addContentType("Media - Video")##
+		$videoSearch.addWSS("/multimedia")##
+		$videoSearch.setSortBy("-startDate")##
+		$videoSearch.pageSize($pageSize)##
+		#foreach($i in [1..${numPages}])##
+			$videoSearch.page($i)##
+			#set($results = $videoSearch.execute())##
+			#if($results.size() > 0)##
+				#set($foo = $itemsArrayList.addAll($results))##
+			#end
+		#end			
+	#end
+
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/" xmlns:dcterms="http://purl.org/dc/terms/">
+<channel>
+	<title>${siteTitle}: $feedTitle</title>
+	<description>$feedDescription</description>
+	<link>$domainString</link>
+	<image>
+		<title>$siteTitle</title>
+		<url>$siteLogoURL</url>
+	</image>
+########################################################################################################
+## Loop through each video item
+########################################################################################################
+## Debug: \$itemsArrayList.size() - $itemsArrayList.size()<br />
+	#foreach($video in $itemsArrayList)##
+		#set($targetFound = false)##
+		#set($target = false)##
+		#set($vidFound = false)##
+		#if($video.id > 0)##
+			#foreach($target in $video.contentTargets)##
+				#if(!$targetFound && !$target.isDead())##
+					#set($targetFound = true)##
+					#set($video = $cms.content($video.id, $target.path))##
+				#end
+			#end
+		#end
+		#foreach($syndication in $video.syndication)##
+			#if($syndication.source == $feedSource && $math.newInt($syndication.vid) > 0)##
+				#set($vidFound = true)##
+			#end
+		#end
+		#if(!$vidFound && $targetFound)##
+			## Clear variables ##
+			#set($cmsID = false)##
+			#set($title = false)##
+			#set($description = false)##
+			#set($keywords = false)##
+			#set($videoURL = false)##
+			#set($mimeType = false)##
+			#set($previewImageURL = false)##
+			#set($previewImageWidth = false)##
+			#set($previewImageHeight = false)##
+			#set($startDate = false)##
+			#set($pubDate = false)##
+			#set($dcStartDate = false)##
+			#set($pubDate = false)##
+			#set($expireDate = false)##
+			#set($dcEndDate = false)##
+			#set($copyrightYear = false)##
+			#set($author = false)##
+			#set($url = false)##
+			#set($sectionCat = false)##
+			## Set variables	##
+			#set($cmsID = $video.id)##
+			#if($video.title && $video.title != "")##
+				#set($title = $string.replaceAll($video.title,"&rsquo;","'"))
+				#set($title = $string.replaceAll($title,"&ldquo;","&quot;"))
+				#set($title = $string.replaceAll($title,"&rdquo;","&quot;"))
+				#set($title = $string.trim($util.encode.xml($util.text($util.encode.htmlEntityToText($title)))))##
+			#end
+			#if($video.body && $video.body != "")##
+				#set($description = $string.replaceAll($video.body,"&rsquo;","'"))
+				#set($description = $string.replaceAll($description,"&ldquo;","&quot;"))
+				#set($description = $string.replaceAll($description,"&rdquo;","&quot;"))
+				#set($description = $string.trim($util.encode.xml($util.text($util.encode.htmlEntityToText($description)))))##
+			#end
+			#if($video.metadata && $video.metadata != "")##
+				#set($keywords = $string.replaceAll($video.metadata,"&rsquo;","'"))
+				#set($keywords = $string.replaceAll($keywords,"&ldquo;","&quot;"))
+				#set($keywords = $string.replaceAll($keywords,"&rdquo;","&quot;"))
+				#set($keywords = $string.trim($util.encode.xml($util.text($util.encode.htmlEntityToText($keywords)))))##
+			#end
+			## Combine $cmsID and $keywords
+			#if($keywords && $keywords != "")##
+				#set($keywords = "${cmsID},${keywords}")##
+			#else##
+				#set($keywords = $cmsID)##	
+			#end
+			## set video file URL and MIME type
+			#if($video.standardVideoURL && $video.standardVideoURL != "")##
+				#set($videoURL = $string.trim($util.encode.xml($util.encode.htmlEntityToText($video.standardVideoURL))))##
+			#end
+			#if($videoURL && $videoURL != "")##
+				#set($extenstion = false)##
+				#if($string.substring($videoURL, $math.subtract($string.length($videoURL),4),$math.subtract($string.length($videoURL),3)) == ".")##
+					#set($extenstion = $string.substring($videoURL, $math.subtract($string.length($videoURL),4),$string.length($videoURL)))##
+				#elseif($string.substring($videoURL, $math.subtract($string.length($videoURL),5),$math.subtract($string.length($videoURL),4)) == ".")##
+					#set($extenstion = $string.substring($videoURL, $math.subtract($string.length($videoURL),5),$string.length($videoURL)))##
+				#end
+				#if($extenstion && $mimeHashMap.containsKey($extenstion))##
+					#set($mimeType = $mimeHashMap.get($extenstion))##
+				#end
+			#end
+			#if($video.prevImage)##
+				#set($previewImageURL = $string.trim($util.encode.xml($cms.media($video.prevImage.id).url)))##
+				#set($previewImageWidth = $cms.media($video.prevImage.id).width)##
+				#set($previewImageHeight = $cms.media($video.prevImage.id).height)##
+			#end
+			#set($startDate = $video.startDate)##
+			#set($liveDate = $video.contentLiveDate)##
+			#set($expireDate = $video.contentDeadDate)##
+			#if($startDate)##
+				#set($pubDate = $util.date("yyyy-MM-dd'T'HH:mm:ss z",$startDate,"America/Los_Angeles"))##
+				#set($copyrightYear = $util.date("yyyy",$startDate,"America/Los_Angeles"))##
+			#else##
+				#set($pubDate = $util.date("yyyy-MM-dd'T'HH:mm:ss z",$liveDate,"America/Los_Angeles"))##
+				#set($copyrightYear = $util.date("yyyy",$liveDate,"America/Los_Angeles"))##
+			#end
+			#if($expireDate)##
+				#set($dcStartDate = $util.date("yyyy-MM-dd'T'HH:mm:ssZ",$startDate,"America/Los_Angeles"))##
+				#set($dcEndDate = $util.date("yyyy-MM-dd'T'HH:mm:ssZ",$expireDate,"America/Los_Angeles"))##
+			#end
+			#if(!$copyrightYear || $copyrightYear == "")##
+				#set($copyrightYear = $util.date("yyyy",$util.now,"America/Los_Angeles"))##
+			#end
+			#if($video.author && $video.author != "")##
+				#set($author = $string.trim($util.encode.xml($util.text($util.encode.htmlEntityToText($video.author)))))##
+			#end
+			#if($video.url && $video.url != "")##
+				#set($url = $video.url)##
+			#end
+			## Create a list of section categories
+			#set($sectionCatArray = $util.newArrayList)##
+			#if(!$video.getCategorization().getCategory(3587).name.toString().equals("Uncategorized"))##
+				#set($sectionCatArray = $video.getCategorization().getCategories(3587))##
+				## create category list
+				#if($sectionCatArray > 0)##
+					#foreach($sectionCatObj in $sectionCatArray)##
+						#if($sectionCat && $sectionCat != "" && !$sectionCatObj.isEmpty)##
+							#set($sectionCat = "${sectionCat},${sectionCatObj.name}")##
+						#else##
+							#set($sectionCat = "${sectionCatObj.name}")##
+						#end
+					#end
+					#set($sectionCat = $string.trim($util.encode.xml($sectionCat)))##
+				#else##
+					#set($sectionCat = "")##
+				#end
+			#end
+#* Debug:
+\$title - $title<br />
+\$keywords - $keywords<br />
+\$videoURL - $videoURL<br />
+\$mimeType - $mimeType<br />
+\$siteTitle - $siteTitle<br />
+\$startDate - $startDate<br />
+\$liveDate - $liveDate<br />
+\$copyrightYear - $copyrightYear<br />
+\$pubDate - $pubDate<br />
+\$cmsID - $cmsID<br /><br />
+*#
+			## Create XML item
+			#if(($title && $title != "") && ($keywords && $keywords != "") && ($videoURL && $videoURL != "") && ($mimeType && $mimeType != "") && ($siteTitle && $siteTitle != "") && ($copyrightYear && $copyrightYear != "") && ($cmsID && $cmsID > 0))##
+
+	<item>
+		<title>$title</title>
+		<description>$!description</description>
+		<link>$!url</link>
+		<media:title type="plain">$title</media:title>
+		<media:description type="plain">$!description</media:description>
+		<media:keywords>$keywords</media:keywords>
+		<media:content url="${videoURL}" type="${mimeType}" lang="en" />
+		<media:category>$!sectionCat</media:category>
+		<media:thumbnail url="$!{previewImageURL}" width="$!{previewImageWidth}" height="$!{previewImageHeight}" />
+		<media:credit role="producer" scheme="urn:ebu">$!author</media:credit>
+		<media:credit role="owner" scheme="urn:yvs">$siteTitle</media:credit>
+		<media:copyright url="http://www.stephensmedia.com/copyright/">$copyrightYear Stephens Media LLC</media:copyright>
+		<pubDate>$pubDate</pubDate>
+#if($dcStartDate && $dcEndDate)##
+		<dcterms:valid>
+			start=${dcStartDate};
+			end=${dcEndDate};
+			scheme=W3C-DTF
+		</dcterms:valid>
+#end
+		<guid isPermaLink="false">$cmsID</guid>
+	</item>
+			#end
+		#end
+	#end
+
+</channel>
+</rss>
+#end

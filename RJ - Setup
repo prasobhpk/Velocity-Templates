@@ -1,0 +1,491 @@
+#########################################################################################################
+## RJ - Setup helper template
+#########################################################################################################
+## Description
+## Main setup template for the Review-Journal website.
+########################################################################################################
+## Setup Variables Reference
+########################################################################################################
+##
+## $setupIncluded - Use this boolean in a module to determine if this template has already been included
+## $domainString - String of the base domain including environment
+## $quote - Provides the quote character as a string
+## $curSection - Current section object
+## $curSectionName - Current section name
+## $breadcrumbArray - array list of section objects starting from root for a breadcrumb navigation
+## $content - Current content object
+## $homepageContent - Homepage configuration content object
+## $landingPageContent - Landing page configuration content object
+## $curDate - Current date/time object, can be changed in Dev using the URL query - ?curDate=M-d-yyyy
+## $setupTemplates - ArrayList of extra setup template names
+## $canonicalURL - String used in the Canonical URL link tag in the <head> of the page
+## $pageTitle - Page title for the <head> of page
+## $pageDescription - Page variable for content page based off of $metaDescription
+## $metaDescription - Meta description for the <head> of page
+## $metaKeywords - Meta keywords for the <head> of page
+## $cssTemplates - ArrayList of extra CSS template names
+## $jsTemplates - ArrayList of extra JavaScript template names
+## $frameworkCol - Number of columns in the framework grid
+## $contentCol - Width in grid columns of the #content container
+## $leftSidebarCol - Width in grid columns of the #sidebar-left container
+## $rightSidebarCol - Width in grid columns of the #sidebar-right container
+## $branding-top - Template name for the #branding-top container
+## $branding-left - Template name for the #branding-left container
+## $branding-right - Template name for the #branding-right container
+## $branding-bottom - Template name for the #branding-bottom container
+## $nav-main - Template name for the #nav-main container
+## $main-top - Template name for the #main-top container
+## $footer - Template name for the #footer container
+## $footer-scripts - Template name for footer scripts (scripts appear before the </body> tag)
+## $positioned-ads - Template name for the positioned ads
+## $content-top - Template name for the #content-top container
+## $content-main - Template name for the #content-main container
+## $content-bottom - Template name for the #content-bottom container
+## $sidebar-left - Template name for the #sidebar-left container
+## $sidebar-right - Template name for the #sidebar-right container
+## $useSmallRJBanner - Determines of the large or small RJ banner should be used
+## $brandingLeftGrid - Assigns grid class to #branding-left for large or small RJ banner  
+## $brandingRightGrid - Assigns grid class to #branding-right for large or small RJ banner
+## $frameworkDevClass - Class used in dev and stage to add the framework grid and container background color
+##
+########################################################################################################
+## Universal Variables
+########################################################################################################
+##
+#set($setupIncluded = true)##
+#set($domainTitle = "ReviewJournal.com")##
+#set($siteTitle = "Las Vegas Review-Journal")##
+#set($showZventsJS = false)##
+#if(!$quote || $quote == "")##
+	#set($quote = $util.encode.htmlEntityToText("&quot;"))##
+#end
+##
+########################################################################################################
+## Domain
+########################################################################################################
+##
+#set($domainString = "http://${cms.envHost}$cms.domain")##
+##
+########################################################################################################
+## Section
+########################################################################################################
+##
+##This allows for sections to be emulated
+#if($req.param("curSection") && $req.param("curSection") != "")##
+	#set($curSection = $cms.websiteSection($req.param("curSection")))##
+#end
+##
+#if(!$curSection)
+	#set($curSection = $cms.websiteSection)##
+#end
+##
+#if($curSection.displayName != "")##
+	#set($curSectionName = $curSection.displayName)##
+#else##
+	#set($curSectionName = $curSection.name)##
+#end
+##
+########################################################################################################
+## Refresh template
+########################################################################################################
+##
+#if(!$cms.content && $curSection.templateRefresh && $curSection.templateRefresh != "")##
+	#set($refreshTemplate = $curSection.templateRefresh)##
+#end
+##
+#if($refreshTemplate && $refreshTemplate != "")##
+	$cms.template($refreshTemplate)##
+#end
+##
+$cms.template("Refresh Daily")##
+##
+########################################################################################################
+## Setup templates
+########################################################################################################
+##
+#if(!$cms.content && !$curSection.templatesSetup.isEmpty())##
+	#set($setupTemplates = $util.newArrayList)##
+	#foreach($item in $curSection.templatesSetup)##
+		#set($foo = $setupTemplates.add($item))##
+	#end
+#end
+##
+########################################################################################################
+## CSS and JavaScript templates
+########################################################################################################
+##
+#if(!$cms.content)##
+	#set($cssTemplates = $util.newArrayList)##
+	#if(!$curSection.templatesCSS.isEmpty())##
+		#foreach($item in $curSection.templatesCSS)##
+			#set($foo = $cssTemplates.add($item))##
+		#end
+	#end
+	##
+	#set($jsTemplates = $util.newArrayList)##
+	#if(!$curSection.templatesJS.isEmpty())##
+		#foreach($item in $curSection.templatesJS)##
+			#set($foo = $jsTemplates.add($item))##
+		#end
+	#end
+#end
+##
+########################################################################################################
+## Content or Landing Page Configuration Objects
+########################################################################################################
+## Default homepage content object to the first item in placement for production
+#set($homepageContent = $cms.filteredLinks("Homepage","/",1,1).get(0))##
+## Setup Content and Landing Page configuration objects 
+#if(!$content && $cms.content)##
+	#set($content = $cms.content)##
+#else##
+	#if($curSection.path == "/")##
+		#if($cms.envHost == "stage.")##
+			## Set homepage content item to #85427562 in staging
+			#set($homepageContent = $cms.content(85427562))##
+		#elseif($cms.envHost == "dev." && !$util.isNull($req.param("homepageItem")) && $math.newInt($req.param("homepageItem")) != 0)##
+			## Set homepage content item to ID given in query (ex: ?homepageItem=85404637) in dev
+			#set($homepageContent = $cms.content($math.newInt($req.param("homepageItem"))))##
+		#end
+	#elseif($cms.filteredLinks("Landing Page",$curSection.path,1,1).size() > 0)##
+		#set($landingPageContent = $cms.filteredLinks("Landing Page",$curSection.path,1,1).get(0))##
+	#elseif($cms.filteredLinks("Vertical Landing Page",$curSection.path,1,1).size() > 0)##
+		#set($verticalPageContent = $cms.filteredLinks("Vertical Landing Page",$curSection.path,1,1).get(0))##
+	#elseif($cms.filteredLinks("General Page",$curSection.path,1,1).size() > 0)##
+		#set($generalPage = $cms.filteredLinks("General Page",$curSection.path,1,1).get(0))##
+	#elseif($cms.filteredLinks("Survey",$curSection.path,1,1).size() > 0)##
+		#set($survey = $cms.filteredLinks("Survey",$curSection.path,1,1).get(0))##
+	#end
+#end
+##
+########################################################################################################
+## Canonical URL
+########################################################################################################
+##
+#if($content)##
+	#set($targetFound = false)##
+	#foreach($target in $content.contentTargets)##
+		#if(!$targetFound && ($target.isLive() || $target.isArchive()))##
+			#if($content.thirdPartyURL && $string.trim($content.thirdPartyURL) != "")##
+				#set($canonicalURL = $string.trim($content.thirdPartyURL))##
+			#elseif($content.URLName && $content.URLName != "")##
+				#set($canonicalURL = "http://${cms.domain}$!{target.path}/${content.URLName}.html")##
+			#else##
+				#set($canonicalURL = "http://${cms.domain}$!{target.path}/${content.id}.html")##
+			#end
+			#set($targetFound = true)##
+		#end
+	#end
+#else##
+	#set($canonicalURL = "http://${cms.domain}$!{curSection.path}")##
+#end
+## Debug: \$canonicalURL - $canonicalURL<br>
+##
+########################################################################################################
+## Date/Time
+########################################################################################################
+##
+#if($cms.envHost == "dev." && ($req.param("curDate") && $req.param("curDate") != ""))##
+	#set($curDate = $util.parseDate($req.param("curDate"), "M-d-yyyy"))##
+#else##
+	#set($curDate = $util.now)##
+#end
+##
+########################################################################################################
+## Page Title
+########################################################################################################
+##
+#if($content)##
+	## Content page title
+	#if($string.indexOf($content.title, "-200") > -1 && $curSection.path.indexOf("/bestoflv") > -1)##
+		#set($endTitleIndex = $string.indexOf($content.title, "-200"))##
+		#set($contentItemTitle = $string.substring($content.title, 0, $endTitleIndex))##
+	#elseif($content.title && $content.title != "")##
+		#set($contentItemTitle = "$content.title - ")##
+	#else##
+		#set($contentItemTitle = false)##
+	#end
+#end
+#if($curSectionName && $curSectionName != "")##
+	#set($curSectionNameTitle = "$curSectionName - ")##
+#else##
+	#set($curSectionNameTitle = false)##
+#end
+##
+#if($curSection.path.indexOf("/hottopics") > -1)##
+	#if($curSection.path.indexOf("/in_depth") > -1)##
+		#set($pageTitle = "$!{contentItemTitle}In Depth - $domainTitle")##
+	#elseif(!$contentItemTitle)##
+		#set($pageTitle = "$!{curSectionNameTitle}${domainTitle}")##
+	#else##
+		#set($pageTitle = "$!{contentItemTitle}${domainTitle}")##
+	#end
+#elseif($curSection.path == "/breakout")##
+	#set($pageTitle = $util.text("$!{contentItemTitle}${domainTitle}"))##
+#elseif($curSection.path.indexOf("/view") > -1 && $curSection.path != "/view")##
+	#if($content)##
+		#set($pageTitle = $util.text("$!{contentItemTitle}$!{curSectionName} View - $domainTitle"))##
+	#else##
+		#set($pageTitle = $util.text("$!{curSectionName} View - $domainTitle"))##	
+	#end
+#else##
+	#if($content)##
+		#set($pageTitle = $util.text("$!{contentItemTitle}$!{curSectionNameTitle}${domainTitle}"))##
+	#else##
+		#set($pageTitle = $util.text("$!{curSectionNameTitle}${domainTitle}"))##	
+	#end
+#end
+## Debug: \$pageTitle = $pageTitle<br />
+##
+########################################################################################################
+## Metadata
+########################################################################################################
+##
+#if($content.metaDescription && $content.metaDescription != "")##
+	#set($metaDescription = $content.metaDescription)##
+#elseif($content)##
+	#if($content.iLead && $content.iLead != "")##
+		#set($tmpDesc = $string.trim($util.text($content.iLead)))##
+	#elseif($content.summary && $content.summary != "")##
+		#set($tmpDesc = $string.trim($util.text($content.summary)))##
+	#elseif($content.body && $content.body != "")##
+		#set($tmpDesc = $string.trim($util.text($content.body)))##
+	#end
+	#if($tmpDesc && $tmpDesc != "")##
+		#set($tmpDesc = $string.replaceAll($tmpDesc, "\r", " "))##
+		#set($tmpDesc = $string.replaceAll($tmpDesc, "\n", " "))##
+		#set($tmpDesc = $string.replaceAll($tmpDesc, "  ", " "))##
+		#if($string.length($tmpDesc) > 200)##
+			#set($inputString = $tmpDesc)##
+			#set($numChars = 200)##
+			$string.trim($cms.template("Get Shortened String"))##
+			#set($metaDescription = "${outputString}...")##
+		#else
+			#set($metaDescription = $tmpDesc)##
+		#end
+	#end
+#end
+##
+#if($metaDescription && $metaDescription != "")##
+	#set($pageDescription = $metaDescription)##
+#else##
+	#set($pageDescription = "")##
+	#set($metaDescription = $cms.hierarchyField("description"))##
+#end
+##
+#set($metaKeywords = $cms.hierarchyField("metaKeywords"))##
+#if($content.metaKeywords && $string.trim($content.metaKeywords) != "")##
+	#if($metaKeywords && $string.trim($metaKeywords) != "")##
+		#set($metaKeywords = "${string.trim($content.metaKeywords)}, ${string.trim($metaKeywords)}")##
+	#else##
+		#set($metaKeywords = $string.trim($content.metaKeywords))##
+	#end
+#end
+#if($content.metadata && $string.trim($content.metadata) != "")##
+	#if($metaKeywords && $string.trim($metaKeywords) != "")##
+		#set($metaKeywords = "${string.trim($content.metadata)}, ${string.trim($metaKeywords)}")##
+	#else##
+		#set($metaKeywords = $string.trim($content.metadata))##
+	#end
+#end
+#if($content)
+	#set($ogType = "article")##
+#else##
+	#set($ogType = false)##
+#end
+##
+########################################################################################################
+## Breadcrumb navigation array
+########################################################################################################
+##
+#set($breadcrumbArray = $util.newArrayList)##
+#set($endBreadcrumb = false)##
+#set($breadcrumbSection = $curSection)##
+#foreach($i in [1..5])##
+	#if(!$endBreadcrumb)##
+		#if($string.equals($breadcrumbSection.name, $cms.domain))##
+			#set($endBreadcrumb = true)##
+		#else##
+			#set($foo = $breadcrumbArray.add(0,$breadcrumbSection))##
+			#set($breadcrumbSection = $cms.parent($breadcrumbSection.path))##
+		#end
+	#end
+#end
+##
+########################################################################################################
+## Framework setup and template assignment
+########################################################################################################
+##
+#set($frameworkCol = 32)##
+#set($sidebarColCount = 0)##
+##
+#if(!$content)##
+	#if($math.newInt($curSection.frameworkLeftSidebar) != 0 && $math.newInt($curSection.frameworkLeftSidebar) < $frameworkCol)##
+		#set($leftSidebarCol = $math.newInt($curSection.frameworkLeftSidebar))##
+		#set($sidebarColCount = $math.add($leftSidebarCol, 0))##
+	#else##
+		#set($leftSidebarCol = false)##
+	#end
+	##
+	#if($math.newInt($curSection.frameworkRightSidebar) != 0 && $math.newInt($curSection.frameworkRightSidebar) < $frameworkCol)##
+		#set($rightSidebarCol = $math.newInt($curSection.frameworkRightSidebar))##
+		#set($sidebarColCount = $math.add($rightSidebarCol, $sidebarColCount))##
+	#else##
+		#set($rightSidebarCol = false)##
+	#end
+#elseif($content)##
+	#if($leftSidebarCol != 0 && $leftSidebarCol < $frameworkCol)##
+		#set($sidebarColCount = $math.add($leftSidebarCol, 0))##
+	#else##
+		#set($leftSidebarCol = false)##
+	#end
+	##
+	#if($rightSidebarCol != 0 && $rightSidebarCol < $frameworkCol)##
+		#set($sidebarColCount = $math.add($rightSidebarCol, $sidebarColCount))##
+	#else##
+		#set($rightSidebarCol = false)##
+	#end
+#end
+## Two sidebars combined can not be larger than 28 columns, otherwise default to no sidebars
+#if($sidebarColCount <= $math.subtract($frameworkCol, 4))##
+	#set($contentCol = $math.subtract($frameworkCol, $sidebarColCount))##
+#else##
+	#set($contentCol = $frameworkCol)##
+	#set($leftSidebarCol = false)##
+	#set($rightSidebarCol = false)##
+#end
+##Debug: \$contentCol = $contentCol<br />
+##Debug: \$leftSidebarCol = $leftSidebarCol<br />
+##Debug: \$rightSidebarCol = $rightSidebarCol<br />
+##
+## Default variables for branding
+#if(!$branding-top || $branding-top == "")
+	#set($branding-top = "RJ - Branding top")##
+#end
+#if(!$branding-left || $branding-left == "")
+	#set($branding-left = "RJ - Branding left")##
+#end
+#if(!$branding-right || $branding-right == "")
+	#set($branding-right = "RJ - Branding right")##
+#end
+#if(!$nav-main || $nav-main == "")
+	#set($nav-main = "RJ - Main Navigation")##
+#end
+#if(!$main-top || $main-top == "")
+	#set($main-top = "Display Third Party Ad Sliding Billboard")##
+#end
+#if(!$footer || $footer == "")
+	#set($footer = "RJ - Footer")##
+#end
+##
+## Determine if large or small banner is used
+#if($curSection.path.indexOf("/view") > -1)##
+	#set($useSmallRJBanner = true)
+#else##
+	#set($useSmallRJBanner = false)
+#end
+##
+## Default branding grid class for large and small banner
+#if(!$useSmallRJBanner)##
+	#set($brandingLeftGrid ="rj-grid-12")##
+	#set($brandingRightGrid ="rj-grid-20")##
+#else##
+	#set($brandingLeftGrid ="rj-grid-10")##
+	#set($brandingRightGrid ="rj-grid-23")##
+#end
+##
+#if(!$content)##
+	#if($curSection.templateBrandingTop && $curSection.templateBrandingTop != "")##
+		#set($branding-top = $curSection.templateBrandingTop)##
+	#end
+	##
+	#if($curSection.templateBrandingLeft && $curSection.templateBrandingLeft != "")##
+		#set($branding-left = $curSection.templateBrandingLeft)##
+	#end
+	##
+	#if($curSection.templateBrandingRight && $curSection.templateBrandingRight != "")##
+		#set($branding-right = $curSection.templateBrandingRight)##
+	#end
+	##
+	#if($curSection.templateBrandingBottom && $curSection.templateBrandingBottom != "")##
+		#set($branding-bottom = $curSection.templateBrandingBottom)##
+	#end
+	##
+	#if($curSection.templateNavMain && $curSection.templateNavMain != "")##
+		#set($nav-main = $curSection.templateNavMain)##
+	#end
+	##
+	#if($curSection.templateMainTop && $curSection.templateMainTop != "")##
+		#set($main-top = $curSection.templateMainTop)##
+	#end
+	##
+	#if($curSection.templateContentTop && $curSection.templateContentTop != "")##
+		#set($content-top = $curSection.templateContentTop)##
+	#end
+	##
+	#if($curSection.templateContentMain && $curSection.templateContentMain != "")##
+		#set($content-main = $curSection.templateContentMain)##
+	#end
+	##
+	#if($curSection.templateContentBottom && $curSection.templateContentBottom != "")##
+		#set($content-bottom = $curSection.templateContentBottom)##
+	#end
+	##
+	#if($curSection.templateSidebarLeft && $curSection.templateSidebarLeft != "")##
+		#set($sidebar-left = $curSection.templateSidebarLeft)##
+	#end
+	##
+	#if($curSection.templateSidebarRight && $curSection.templateSidebarRight != "")##
+		#set($sidebar-right = $curSection.templateSidebarRight)##
+	#end
+	##
+	#if($curSection.templateFooter && $curSection.templateFooter != "")##
+		#set($footer = $curSection.templateFooter)##
+	#end
+	##
+	#if($curSection.templateFooterScripts && $curSection.templateFooterScripts != "")##
+		#set($footer-scripts = $curSection.templateFooterScripts)##
+	#end
+	##
+	#if($curSection.templatePositionedAds && $curSection.templatePositionedAds != "")##
+		#set($positioned-ads = $curSection.templatePositionedAds)##
+	#end
+#end
+##
+#if($req.param("bkgd-grid") && ($req.intParam("bkgd-grid") == 8 || $req.intParam("bkgd-grid") == 16 || $req.intParam("bkgd-grid") == 32))##
+	#set($gridType = $req.intParam("bkgd-grid"))##
+	#set($bkgd-grid = "bkgd-grid-${gridType}")##
+#else
+	#set($bkgd-grid = false)##
+#end
+##
+#if($req.param("bkgd-container") && $req.Param("bkgd-container") == "true")##
+	#set($bkgd-container = "bkgd-container")##
+#else
+	#set($bkgd-container = false)##
+#end
+##
+########################################################################################################
+## Development query parameters
+########################################################################################################
+##
+#if(($cms.envHost == "dev." || $cms.envHost == "stage.") && $bkgd-grid && $bkgd-container)##
+	#set($frameworkDevClass = " class=${quote}${bkgd-grid} ${bkgd-container}${quote};")##
+	#set($frameworkDevClass = $util.encode.htmlEntityToText($frameworkDevClass))##
+#elseif(($cms.envHost == "dev." || $cms.envHost == "stage.") && $bkgd-grid)##
+	#set($frameworkDevClass = " class=${quote}${bkgd-grid}${quote}")##
+	#set($frameworkDevClass = $util.encode.htmlEntityToText($frameworkDevClass))##
+#elseif(($cms.envHost == "dev." || $cms.envHost == "stage.") && $bkgd-container)##
+	#set($frameworkDevClass = " class=${quote}${bkgd-container}${quote}")##
+	#set($frameworkDevClass = $util.encode.htmlEntityToText($frameworkDevClass))##
+#else##
+	#set($frameworkDevClass = false)##
+#end
+##
+########################################################################################################
+## Section specific Setup templates
+########################################################################################################
+##
+#if($string.indexOf($curSection.path, "/bestoflv") > -1)##
+	$cms.template("BOLV Setup")##
+#end

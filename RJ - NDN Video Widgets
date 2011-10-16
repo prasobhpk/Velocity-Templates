@@ -1,0 +1,136 @@
+########################################################################################################
+## RJ - NDN Video Widgets
+########################################################################################################
+## This module creates widgets for NDN video. There are two options: "Top Picks Launcher" and "Thumbnail Launcher"
+## External variables that need to be declared prior to template:
+## $domainString (required) - Current domain string declared in the RJ - Setup template.
+## $xmlURL (required) - XML URL of the NDN video feed. Must be MRSS 2.0
+## $numResults (required) - The number of results returned from the feed. If the feed contains less items then this will be adjusted.
+## $widgetType (required) - There are two options: "Top Picks Launcher" and "Thumbnail Launcher"
+## $mixLocalContent (optional) - When this boolean (true/false) is true this will make the first two and every even item local video.
+##
+## Requires the following CSS and JavaScript
+## <link type="text/css" rel="stylesheet" href="http://www.lvrj.com/includes/reset-min.css" />
+## <link type="text/css" rel="stylesheet" href="http://www.lvrj.com/includes/video-widgets.css" />
+## <script type="text/javascript" src="http://www.lvrj.com/includes/jquery.min.js"></script>
+## <script type="text/javascript" src="http://www.lvrj.com/includes/jquery.jcarousel.min.js"></script>
+## <script type="text/javascript" src="http://www.lvrj.com/includes/jquery.video-widgets.min.js"></script>
+#*
+$cms.template("RJ - Setup")##
+Debug:<br />
+\$domainString - $domainString<br />
+\$xmlURL - $xmlURL<br />
+\$numResults - $numResults<br />
+\$widgetType - $widgetType<br />
+*#
+########################################################################################################
+##
+#set($ndnTracking = false)##
+#if(($domainString && $domainString != "") && ($xmlURL && $xmlURL != "") && ($numResults && $math.newInt($numResults) > 0) && ($widgetType && $widgetType != ""))##
+	#set($mediaArrayList = $util.newArrayList)##
+	## Get video data from feed
+	#set($doc = $feed.getXMLDocument($xmlURL))##
+	#set($channelElem = $doc.documentElement.getElementsByTagName("channel").item(0))##
+	#foreach($i in [0..${math.subtract($channelElem.childNodes.length,1)}])##
+		#set($channelChild = $channelElem.childNodes.item($i))##
+		## We want to skip the #text nodes because they are just whitespace between tags.
+		#if($channelChild.nodeName != "#text" && $channelChild.nodeName == "item")##
+			#set($itemElem = $channelChild)##
+			#if($string.trim($itemElem.getElementsByTagName("title").item(0).textContent) != "")##
+				#set($ndnTitle = $util.encode.form($string.trim($itemElem.getElementsByTagName("title").item(0).textContent)))##
+			#else##
+				#set($ndnTitle = false)##
+			#end
+			#if($string.trim($itemElem.getElementsByTagName("image").item(0).textContent) != "")##
+				#set($ndnImageSmall = $string.trim($itemElem.getElementsByTagName("image").item(0).textContent))##
+				#if($string.indexOf($ndnImageSmall,".sf.") == -1 && $string.substring($ndnImageSmall, $math.subtract($string.length($ndnImageSmall),4),$math.subtract($string.length($ndnImageSmall),3)) == ".")##
+					#set($ndnImageLarge = "${string.substring($ndnImageSmall,0,$math.subtract($string.length($ndnImageSmall),4))}.sf${string.substring($ndnImageSmall,$math.subtract($string.length($ndnImageSmall),4),$string.length($ndnImageSmall))}")##
+				#else##
+					#set($ndnImageLarge = false)##
+				#end
+			#else##
+				#set($ndnImageSmall = false)##
+				#set($ndnImageLarge = false)##
+			#end
+			#if($string.trim($itemElem.getElementsByTagName("VideoId").item(0).textContent) != "")##
+				#set($ndnVid = $string.trim($itemElem.getElementsByTagName("VideoId").item(0).textContent))##
+			#else##
+				#set($ndnVid = false)##
+			#end
+			#if($ndnTitle && $ndnImageSmall && $ndnImageLarge && $ndnVid)##
+				#set($ndnObj = $util.newObject)##
+				#set($foo = $ndnObj.addString("title",$ndnTitle))##
+				#set($foo = $ndnObj.addString("smallImageURL",$ndnImageSmall))##
+				#set($foo = $ndnObj.addString("largeImageURL",$ndnImageLarge))##
+				#set($foo = $ndnObj.addString("vid",$ndnVid))##
+				#set($foo = $ndnObj.addString("url","${domainString}/multimedia/national/${ndnVid}"))##
+				#set($foo = $mediaArrayList.add($ndnObj))##
+			#end
+		#end
+	#end
+	#if($mixLocalContent)##
+		#set($localCount = 0)##
+		#foreach($item in $cms.links("/multimedia", 1, $numResults))##
+			#if($item.typeName == "Media - Video" || $item.typeName == "Media - Slideshow")##
+				#if($localCount > 1 && $math.mod($localCount,2) == 0)##
+					#set($localCount = $math.add($localCount,2))##
+				#else##
+					#set($localCount = $math.add($localCount,1))##
+				#end
+				#if(!$util.isNull($item.prevImage))##
+					#set($imgWidth = $item.prevImage.width)##
+					#set($imgHeight = $item.prevImage.height)##
+					#set($smallResizeImgWidth = 83)##
+					#set($largeResizeImgWidth = 298)##
+					#set($smallResizeImgHeight = $math.round($math.divide($smallResizeImgWidth,$math.divide($imgWidth,$imgHeight))))##
+					#set($largeResizeImgHeight = $math.round($math.divide($largeResizeImgWidth,$math.divide($imgWidth,$imgHeight))))##
+					#set($smallPreviewImgURL = $string.replaceFirst($item.prevImage.url,"/images/","/images/${smallResizeImgWidth}*${smallResizeImgHeight}/"))##
+					#set($largePreviewImgURL = $string.replaceFirst($item.prevImage.url,"/images/","/images/${largeResizeImgWidth}*${largeResizeImgHeight}/"))##
+				#end
+				#if(!$util.isNull($item.title) && !$util.isNull($item.prevImage) && $item.id > 0)##
+					#set($ndnObj = $util.newObject)##
+					#if($item.typeName == "Media - Slideshow")
+						#set($foo = $ndnObj.addString("title","PHOTOS: $item.title"))##
+					#else##
+						#set($foo = $ndnObj.addString("title",$item.title))##					
+					#end
+					#set($foo = $ndnObj.addString("smallImageURL",$smallPreviewImgURL))##
+					#set($foo = $ndnObj.addString("largeImageURL",$largePreviewImgURL))##
+					#set($foo = $ndnObj.addString("vid",$item.id))##
+					#set($foo = $ndnObj.addString("url",$item.url))##
+					#set($foo = $mediaArrayList.add($math.subtract($localCount,1),$ndnObj))##
+				#end	
+			#end
+		#end
+	#end
+	#if($mediaArrayList.size() < $math.newInt($numResults))##
+		#set($numResults = $mediaArrayList.size())##
+	#end
+	#if($widgetType == "Top Picks Launcher")##
+		#set($ndnTracking = true)##
+
+<div id="widget-singleImage">
+	<ul id="singleImage" class="jcarousel-skin-singleImage">
+		#foreach($i in [0..${math.subtract($numResults,1)}])##
+			#set($ndnObj = $mediaArrayList.get($i))##
+
+		<li><div><a href="${ndnObj.url}"><img src="${ndnObj.largeImageURL}" width="298" alt="" /></a></div><a href="${ndnObj.url}" class="title"><span>${ndnObj.title}</span></a></li>
+		#end
+		
+	</ul>
+</div>
+	#elseif($widgetType == "Thumbnail Launcher")##
+		#set($ndnTracking = true)##
+
+<div id="widget-multiImage">
+	<ul id="multiImage" class="jcarousel-skin-multiImage">
+		#foreach($i in [0..${math.subtract($numResults,1)}])##
+			#set($ndnObj = $mediaArrayList.get($i))##
+
+		<li><div><a href="${ndnObj.url}"><img src="${ndnObj.smallImageURL}" width="83" alt="" /></a></div><a href="${ndnObj.url}" class="title"><span>${ndnObj.title}</span></a></li>
+		#end
+
+	</ul>
+</div>
+	#end
+#end

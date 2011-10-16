@@ -1,0 +1,175 @@
+########################################################################################################
+## [Name of Content Type] Template Configuration
+########################################################################################################
+## Description
+## This is the example template for Content Type configuration and should not be used in production. 
+## Please copy and configure the contents of this template and name the new template 
+## "RJ - [Content Type]" with the Folder assignment of "RJ - Layout Templates".
+##
+## To configure an item, uncomment the variable declaration and add the requested information.
+########################################################################################################
+## Framework - Left Sidebar Width
+##
+## If the left sidebar should display, enter the number of columns (based off the frameworks 
+## 32 column grid - http://media.lvrj.com/documents/rj-framework-grid-32-columns.pdf) the left sidebar 
+## will span. Leave at 0 if not being used.
+##
+#set($leftSidebarCol = 0)##
+##
+########################################################################################################
+## Framework - Right Sidebar Width
+##
+## If the right sidebar should display, enter the number of columns (based off the frameworks 
+## 32 column grid - http://media.lvrj.com/documents/rj-framework-grid-32-columns.pdf) the right sidebar 
+## will span. Leave at 0 if not being used.
+##
+#set($rightSidebarCol = 0)##
+##
+########################################################################################################
+## Framework Template Assignment - Setup Templates
+##
+## Add the template file name for Setup templates that need to be inserted below RJ - Setup template. 
+## The RJ - Setup template is automatically included.
+##
+## #set($setupTemplates = $util.newArrayList)##
+## #set($foo = $setupTemplates.add(""))##
+##
+########################################################################################################
+## Refresh Template
+##
+## Add a template name if an extra refresh template is needed besides "Refresh Daily". Leave commented 
+## out if not being used.
+##
+## #set($refreshTemplate = "")##
+##
+########################################################################################################
+## Framework - CSS Templates
+##
+## Add the template file name for CSS templates that need to appear in the <head>. Do not add the 
+## templates reset-min.css, framework.css or layout.css, these are automatically included. Add a new 
+## $cssTemplates.add("")## to add a new CSS template. Leave commented out if not being used.
+##
+#set($cssTemplates = $util.newArrayList)##
+## #set($foo = $cssTemplates.add(""))##
+##
+########################################################################################################
+## Framework - JavaScript Templates
+##
+## Add the template file name for JavaScript templates that need to appear in the <head>. Do not add the 
+## templates jquery-1.3.2.min.js or jquery.cookie.js, these are automatically included. Add a new 
+## $jsTemplates.add("")## to add a new JavaScript template. Leave commented out if not being used.
+##
+#set($jsTemplates = $util.newArrayList)##
+## #set($foo = $jsTemplates.add(""))##
+##
+########################################################################################################
+## Framework Template Assignment - #sidebar-left
+##
+## Add the template name for the #sidebar-left container. Leave commented out if not being used.
+##
+## #set($sidebar-left = "")##
+##
+########################################################################################################
+## Framework Template Assignment - #sidebar-right
+##
+## Add the template name for the #sidebar-right container. Leave commented out if not being used.
+##
+## #set($sidebar-right = "")##
+##
+########################################################################################################
+## Framework Template Assignment - #branding-top
+##
+## Add the template name for the #branding-top container. Leave commented out to use default.
+##
+## #set($branding-top = "")##
+##
+########################################################################################################
+## Framework Template Assignment - #branding-left
+##
+## Add the template name for the #branding-left container. Leave commented out to use default.
+##
+## #set($branding-left = "")##
+##
+## Allow use of <h1> tag in the content instead of #branding-left
+#set($useH1Content = true)##
+##
+########################################################################################################
+## Framework Template Assignment - #branding-right
+##
+## Add the template name for the #branding-right container. Leave commented out to use default.
+##
+## #set($branding-right = "")##
+##
+########################################################################################################
+## Framework Template Assignment - #branding-bottom
+##
+## Add the template name for the #branding-bottom container. Leave commented out to use default.
+##
+## #set($branding-bottom = "")##
+##
+########################################################################################################
+## Framework Template Assignment - #nav-main
+##
+## Add the template name for the #nav-main container. Leave commented out to use default.
+##
+## #set($nav-main = "")##
+##
+########################################################################################################
+## Framework Template Assignment - #main-top
+##
+## Add the template name for the #main-top container. Leave commented out if not being used.
+##
+## #set($main-top = "")##
+##
+########################################################################################################
+## Framework Template Assignment - #content-top
+##
+## Add the template name for the #content-top container. Leave commented out if not being used.
+##
+## #set($content-top = "")##
+##
+########################################################################################################
+## Framework Template Assignment - #content-main
+##
+## Add the template name for the #content-main container. Leave commented out if not being used.
+##
+## #set($content-main = "")##
+##
+########################################################################################################
+## Framework Template Assignment - #content-bottom
+##
+## Add the template name for the #content-bottom container. Leave commented out if not being used.
+##
+## #set($content-bottom = "")##
+##
+########################################################################################################
+## Framework Template Assignment - #footer
+##
+## Add the template name for the #footer container. Leave commented out if not being used.
+##
+## #set($footer = "")##
+##
+########################################################################################################
+## Framework Template Assignment - Footer Scripts
+##
+## Add the template name for Footer Scripts (scripts appear before the </body> tag). Leave commented out 
+## if not being used.
+##
+## #set($footer-scripts = "")##
+##
+########################################################################################################
+## NO NEED TO EDIT BELOW
+########################################################################################################
+########################################################################################################
+## Setup template
+########################################################################################################
+##
+$string.trim($cms.template("RJ - Setup"))
+##
+########################################################################################################
+## Framework template
+########################################################################################################
+##
+$cms.template("RJ - Framework")##
+##
+########################################################################################################

@@ -1,0 +1,97 @@
+#########################################################################################################
+## Time/Date format helper template
+#########################################################################################################
+## Description
+## A helper template that formats the date and/or time of a Date object. Variables that need to be 
+## defined before the template include are documented in the template.
+#########################################################################################################
+## Input variables:
+## $dateInput (date Object, required) - the required date object that will be translated into text.
+## $useNoon (boolean, default false) - uses the text "noon" instead of 12:00 PM
+## $useMidnight (boolean, default false) - uses the text "midnight" instead of 12:00 AM
+## $styleMeridiem (boolean, default false) - changes AM to a.m. and PM to p.m.
+## $useNbsp (boolean, default false) - uses &nbsp; instead of spaces between date text
+## $dateFormats (HashMap, optional) - an optional HashMap that defines a series of time based keys and the associated formats.
+##
+## Date formats use format symbols listed on p.35 of template guide or the comparative format (%c). If nothing is declared or 
+## matched, the default format is "MMMM d, yyyy 'at' h:mm a"
+## Date format keys: default, within1Minute, lessThan30Minutes, lessThan1Hour, lessThan2Hours, sameDay
+##
+## Comparative format is identified by %c and compares $dateInput to $curDate.
+## Comparative format returns one of the following:
+## "(integer) seconds" or "(integer) second"
+## "(integer) minutes" or "(integer) minute"
+## "(integer) hours" or "(integer) hour"
+## "(integer) days" or "(integer) day"
+## "(integer) weeks" or "(integer) week"
+## "(integer) months" or "(integer) month"
+## "(integer) years" or "(integer) year"
+##
+## Example: 
+## #set($dateFormats = $util.newHashMap)##
+## #set($foo = $dateFormats.put("default","MMMM, d 'at' h:mm a"))##
+## #set($foo = $dateFormats.put("lessThan30Minutes","%c ago"))##
+## #set($foo = $dateFormats.put("sameDay","h:mm a"))##
+##
+## Output variable: $dateOutput (string)
+#########################################################################################################
+##
+#if($dateInput && $util.type($dateInput) == "Date")##
+	## Ensure $curDate is set
+	#if(!$curDate || $curDate == "")##
+		#set($curDate = $util.now)##
+	#end
+	## Get the date format
+	#if($dateFormats.containsKey("within1Minute") && ($util.isEqualTime($dateInput, $util.add($curDate,"minute",-1)) || $util.isAfter($dateInput, $util.add($curDate,"minute",-1))))##
+		#set($dateFormat = $dateFormats.get("within1Minute"))##
+	#elseif($dateFormats.containsKey("lessThan30Minutes") && $util.isAfter($dateInput, $util.add($curDate,"minute",-30)))##
+		#set($dateFormat = $dateFormats.get("lessThan30Minutes"))##
+	#elseif($dateFormats.containsKey("lessThan1Hour") && $util.isAfter($dateInput, $util.add($curDate,"hour",-1)))##
+		#set($dateFormat = $dateFormats.get("lessThan1Hour"))##
+	#elseif($dateFormats.containsKey("lessThan2Hours") && $util.isAfter($dateInput, $util.add($curDate,"hour",-2)))##
+		#set($dateFormat = $dateFormats.get("lessThan2Hours"))##
+	#elseif($dateFormats.containsKey("sameDay") && $util.inSameDay($dateInput, $curDate))##
+		#set($dateFormat = $dateFormats.get("sameDay"))##
+	#elseif($dateFormats.containsKey("default"))##
+		#set($dateFormat = $dateFormats.get("default"))##
+	#else##
+		#set($dateFormat = "MMMM d, yyyy 'at' h:mm a")##
+	#end
+	## Remove abbreviation period from May when MMM. is used
+	#if($util.date("MMM", $dateInput, "America/Los_Angeles") == "May")##
+		#if($string.indexOf($dateFormat, " MMM.") != -1)
+			#set($dateFormat = $string.replaceAll($dateFormat, " MMM.", " MMM"))##
+		#end
+		#if($string.startsWith($dateFormat, "MMM."))##
+			#set($dateFormat = $string.replaceFirst($dateFormat, "MMM.", "MMM"))##
+		#end
+	#end
+	## Translate comparative symbol
+	#if($string.indexOf($dateFormat,"%c") != -1)##
+		#set($dateOutput = $string.replaceAll($dateFormat,"%c",$dateComparisonTool.difference($dateInput, $curDate)))##
+	## Create formated date string
+	#else##
+		#set($dateOutput = $util.date($dateFormat, $dateInput, "America/Los_Angeles"))##	
+	#end
+	## Use Noon
+	#if($useNoon)##
+		#set($dateOutput = $string.replaceAll($dateOutput,"12:00 PM","noon"))##
+		#set($dateOutput = $string.replaceAll($dateOutput,"12 PM","noon"))##
+	#end
+	## Use Midnight
+	#if($useMidnight)##
+		#set($dateOutput = $string.replaceAll($dateOutput,"12:00 AM","midnight"))##
+		#set($dateOutput = $string.replaceAll($dateOutput,"12 AM","midnight"))##
+	#end
+	## Style Meridiem
+	#if($styleMeridiem)##
+		#set($dateOutput = $string.replaceAll($dateOutput,"PM","p.m."))##
+		#set($dateOutput = $string.replaceAll($dateOutput,"AM","a.m."))##	
+	#end
+	## Switch spaces with non-breaking spaces
+	#if($useNbsp)##
+		#set($dateOutput = $string.replaceAll($dateOutput," ","&nbsp;"))##
+	#end
+#else
+	#set($dateOutput = false)##
+#end

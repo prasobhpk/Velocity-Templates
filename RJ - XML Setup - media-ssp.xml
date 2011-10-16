@@ -1,0 +1,214 @@
+########################################################################################################
+## Setup template for media-ssp.xml 
+########################################################################################################
+## Description
+## Setup template for media-ssp.xml
+########################################################################################################
+## Create objects and variables for XML
+########################################################################################################
+## TO DO - set appropriate URL for each of the commented out multi-media content types
+##
+#if($req.param("type") && $req.param("type") != "")##
+	#set($paramType = false)##
+	#set($paramID = false)##
+	#set($vpWidth = false)##
+	#set($vpHeight = false)##
+	#set($param = $string.toLowerCase($req.param("type")))##
+	#if($string.indexOf($param, "-section-") != -1)##
+		#foreach($paramSplit in $string.split($param, "-section-"))##
+			#if($velocityCount == 1)##
+				#set($param = $paramSplit)##
+			#elseif($velocityCount == 2)##
+				#set($sectionCatID = $math.newInt($paramSplit))##
+			#end
+		#end
+	#end
+	#if($string.indexOf($param, "-topic-") != -1)##
+		#foreach($paramSplit in $string.split($param, "-topic-"))##
+			#if($velocityCount == 1)##
+				#set($param = $paramSplit)##
+			#elseif($velocityCount == 2)##
+				#set($topicCatID = $math.newInt($paramSplit))##
+			#end
+		#end
+	#end
+	#if($string.indexOf($param, "-vpsize-") != -1)##
+		#foreach($paramSplit in $string.split($param, "-vpsize-"))##
+			#if($velocityCount == 1)##
+				#set($param = $paramSplit)##
+			#elseif($velocityCount == 2)##
+				#if($string.indexOf($paramSplit, "x") != -1)##
+					#foreach($sizeSplit in $string.split($paramSplit, "x"))##
+						#if($velocityCount == 1)##
+							#set($vpWidth = $math.newInt($sizeSplit))##
+						#elseif($velocityCount == 2)##
+							#set($vpHeight = $math.newInt($sizeSplit))##
+						#end
+					#end
+				#end
+			#end
+		#end
+	#end
+	#if($string.indexOf($param, "-id-") != -1)##
+		#foreach($paramSplit in $string.split($param, "-id-"))##
+			#if($velocityCount == 1)##
+				#set($paramType = $paramSplit)##
+			#elseif($velocityCount == 2)##
+				#set($paramID = $math.newInt($paramSplit))##
+			#end
+		#end
+	#else
+		#set($paramType = $param)##
+	#end
+	##
+	#if($paramType == "slideshow" && $paramID)##
+		## Create slideshow object
+		#set($slideshow = $cms.content($paramID, "/multimedia"))##
+		##
+		## Slideshow title
+		#set($title = $util.encode.xml($slideshow.title))##
+		##
+		## Slideshow byline
+		#set($byline = $util.encode.xml($slideshow.byline))##
+		##
+		## Slideshow description
+		#set($description = $util.encode.xml($string.trim($util.text($slideshow.body))))##
+		##
+		## Slideshow preview image
+		#if($util.type($slideshow.prevImage) == "MediaPlacement")##
+			#set($prevImage = $slideshow.prevImage)##
+		#elseif($util.type($slideshow.prevImage) == "ArrayList")##
+			#foreach($item in $slideshow.prevImage)##
+				#if($velocityCount == 1)##
+					#set($prevImage = $item)##	
+				#end
+			#end
+		#end
+		##
+		## Slideshow page URL
+		#set($contentURL = $util.encode.xml($slideshow.url))##
+		##
+		## Create an array of image from article
+		#set($slideshowCount = $slideshow.slideshowPhotos.size())##
+		#set($slideshowArray = $util.newArrayList)##
+		#foreach($image in $slideshow.slideshowPhotos)##
+			#set($foo = $slideshowArray.add($image))##
+		#end
+		## Image and thumbnail resizing
+		#set($tnResizeWidth = 100)##
+		#set($lgResizeWidth = 1000)##
+	#elseif(($paramType == "video-std" || $paramType == "video-hd") && $paramID)##
+		## Create video object
+		#set($video = $cms.content($paramID, "/multimedia"))##
+		##
+		## Video title
+		#set($title = $util.encode.xml($video.title))##
+		##
+		## Video byline
+		#set($byline = $util.encode.xml($video.byline))##
+		##
+		## Video description
+		#set($description = $util.encode.xml($string.trim($util.text($video.body))))##
+		##
+		#if($paramType == "video-std")##
+			## Video URL
+			#set($videoURL = $util.encode.xml($video.standardVideoURL))##
+		#elseif($paramType == "video-hd")##
+			## Video URL
+			#set($videoURL = $util.encode.xml($video.hdVideoURL))##
+		#end
+		##
+		## Video preview image	
+		#if($util.type($video.prevImage) == "MediaPlacement")##
+			#set($prevImage = $video.prevImage)##
+		#elseif($util.type($video.prevImage) == "ArrayList")##
+			#foreach($item in $video.prevImage)##
+				#if($velocityCount == 1)##
+					#set($prevImage = $item)##	
+				#end
+			#end
+		#end
+		##
+		## Video page URL
+		#set($contentURL = $util.encode.xml($video.url))##
+	#elseif($paramType == "multi-video")##
+		#if(($sectionCatID && $sectionCatID > 0) || ($topicCatID && $topicCatID > 0))##
+			## Create an array of media from the /multimedia placement list
+			#set($mediaArray = $util.newArrayList)##
+			#set($mediaLinksArray = $cms.newLinks)##
+			$mediaLinksArray.setDestination("/multimedia")##
+			$mediaLinksArray.addContentType("Media - Video")##
+			#if($sectionCatID && $sectionCatID > 0)##
+				$mediaLinksArray.setCategorization($cms.getCategorization([3587],[$sectionCatID]))##
+			#end
+			#if($topicCatID && $topicCatID > 0)##
+				$mediaLinksArray.setCategorization($cms.getCategorization([2757],[$topicCatID]))##
+			#end
+			#foreach($item in $mediaLinksArray.links(1,10))##
+				#set($foo = $mediaArray.add($item))##
+			#end		
+		#else##
+			## Create an array of videos from the /multimedia placement list
+			#set($mediaArray = $util.newArrayList)##
+			#foreach($item in $cms.filteredLinks("Media - Video","/multimedia",1,10))##
+				#set($foo = $mediaArray.add($item))##
+			#end
+		#end
+		## Thumbnail resizing
+		#set($tnResizeWidth = 100)##
+	#elseif($paramType == "multi-media" || $paramType == "multimedia")##
+		## Create an array of media from the /multimedia placement list
+		#set($mediaArray = $util.newArrayList)##
+		#set($mediaLinksArray = $cms.newLinks)##
+		$mediaLinksArray.setDestination("/multimedia")##
+		$mediaLinksArray.addContentType("Media - Video")##
+		$mediaLinksArray.addContentType("Media - Slideshow")##
+		##$mediaLinksArray.addContentType("Media - AP")##
+		##$mediaLinksArray.addContentType("Media - Audio")##
+		##$mediaLinksArray.addContentType("Media - Special Project")##
+		##$mediaLinksArray.addContentType("Media - Third Party Video")##
+		#if($sectionCatID && $sectionCatID > 0)##
+			$mediaLinksArray.setCategorization($cms.getCategorization([3587],[$sectionCatID]))##
+		#end
+		#if($topicCatID && $topicCatID > 0)##
+			$mediaLinksArray.setCategorization($cms.getCategorization([2757],[$topicCatID]))##
+		#end
+		#foreach($item in $mediaLinksArray.links(1,10))##
+			#set($foo = $mediaArray.add($item))##
+		#end
+		## Thumbnail resizing
+		#set($tnResizeWidth = 100)##
+	#end
+##
+########################################################################################################
+## Validate XML tag parameters
+########################################################################################################
+##
+	## Check if $title exists
+	#if($title && $title != "")##
+		#set($albumTitle = true)##
+	#end
+	## Check if $description exists
+	#if($description && $description != "")##
+		#set($albumDescription = true)##
+	#end
+	## Check if $videoURL exists for standard and HD video
+	#if($videoURL && $videoURL != "" && ($paramType == "video-std" || $paramType == "video-hd"))##
+		#set($videoSrc = true)##
+	#end
+	## Check if $prevImage exists
+	#if($prevImage)##
+		#set($vidPreview = true)##
+	#end
+#end
+##
+## Only show XML if necessary query parameters and objects are provided
+#if (($paramType == "video-std" || $paramType == "video-hd" || $paramType == "slideshow") && $paramID)##
+	#set($displayXML = true)##
+#elseif($paramType == "multi-video" && !$videoArray.isEmpty())
+	#set($displayXML = true)##
+#elseif(($paramType == "multi-media" || $paramType == "multimedia") && !$mediaArray.isEmpty())
+	#set($displayXML = true)##
+#else##	
+	#set($displayXML = false)##
+#end
