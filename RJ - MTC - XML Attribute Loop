@@ -1,0 +1,27 @@
+#########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+##
+## Part of the XML parser template (RJ - MTC - XML Parser) that reads the XML tag attributes of the 
+## Meet the Candidates data provided by an external database. Meet the Candidates was part of the 2010 
+## election project. We utilized a Django database to collect information from local candidates using web 
+## surveys and developed profile pages on the Review-Journal website to assist readers in making voting 
+## decisions.
+#########################################################################################################
+#if($nodeAttributes.length > 0)##
+	#foreach($i in [0..$math.subtract($nodeAttributes.length,1)])##
+		#if($stringVar.contains($nodeAttributes.item($i).name))##			
+			#set($foo = $mtcObject.addString("${nodeName}-${nodeAttributes.item($i).name}", $nodeAttributes.item($i).value))##
+		#elseif($intVar.contains($nodeAttributes.item($i).name))##
+			#set($foo = $mtcObject.addInt("${nodeName}-${nodeAttributes.item($i).name}", $math.newInt($nodeAttributes.item($i).value)))##
+		#elseif($booleanVar.contains($nodeAttributes.item($i).name))##
+			#if($nodeAttributes.item($i).value == "true")##
+				#set($booleanVar = true)##
+			#else##
+				#set($booleanVar = false)##
+			#end
+			#set($foo = $mtcObject.addBoolean("${nodeName}-${nodeAttributes.item($i).name}", $booleanVar))##
+		#else##
+			#set($foo = $mtcObject.add("${nodeName}-${nodeAttributes.item($i).name}", $nodeAttributes.item($i).value))##
+		#end
+	#end
+#end

@@ -1,0 +1,60 @@
+#########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+##
+## A helper template (similar to a function) that produces a "first" and "last" class for HTML lists.
+#########################################################################################################
+## Display List Class helper template
+#########################################################################################################
+## Description
+## This helper template will output the class attribute or specific class name for the first item and last item of a list. The template needs to be used in a loop. Variables that need to be defined before the template include are documented in the template.
+#########################################################################################################
+## Input variables:
+## $listArray (Array List, required) - the required array list of items that will be presented in an HTML list
+## $firstListItem (integer, default 1) - the position in the loop representing the first item, useful when creating two lists from one loop
+## $lastListItem (integer, default $listArray.size()) - the position in the loop representing the last item
+## $halfListItem (integer, optional) - if a loop is split into two lists, the halfway point determines the end of the first list
+## $displayType (attribute or class, default attribute) - output the full attribute or just the class name
+##
+## Output: $listClass
+#########################################################################################################
+#if(!$quote || $quote == "")##
+	#set($quote = $util.encode.htmlEntityToText("&quot;"))##
+#end
+#if(!$firstListItem || $math.newInt($firstListItem) <= 0)##
+	#set($firstListItem = 1)##
+#end
+#if(!$lastListItem || $lastListItem == "" || $math.newInt($lastListItem) < $listArray.size())##
+	#set($lastListItem = $listArray.size())##
+#end
+#if(!$displayType || $displayType == "")##
+	#set($displayType = "attribute")##
+#end
+#if($listArray && $listArray.size() > 0 && ($displayType == "attribute" || $displayType == "class"))##
+	#if(($velocityCount == 1 || $velocityCount == $math.add(1,$math.newInt($halfListItem))) && ($velocityCount == $lastListItem || $velocityCount == $math.newInt($halfListItem)))##
+		#if($displayType == "attribute")##
+			#set($listClass = " class=${quote}first last${quote}")##
+		#elseif($displayType == "class")##
+			#set($listClass = "first last")##		
+		#end
+	#elseif($velocityCount == 1 || $velocityCount == $math.add(1,$math.newInt($halfListItem)))##
+		#if($displayType == "attribute")##
+			#set($listClass = " class=${quote}first${quote}")##
+		#elseif($displayType == "class")##
+			#set($listClass = "first")##		
+		#end
+	#elseif($velocityCount == $lastListItem || $velocityCount == $math.newInt($halfListItem))##
+		#if($displayType == "attribute")##
+			#set($listClass = " class=${quote}last${quote}")##
+		#elseif($displayType == "class")##
+			#set($listClass = "last")##		
+		#end
+	#else##
+		#set($listClass = "")##		
+	#end
+#else##
+	#set($listClass = "")##	
+#end
+#set($firstListItem = false)##
+#set($lastListItem = false)##
+#set($halfListItem = false)##
+#set($displayType = false)##

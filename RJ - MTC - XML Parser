@@ -1,0 +1,230 @@
+#########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+##
+## An XML parser template that reads the Meet the Candidates data from an external database and creates 
+## objects. Meet the Candidates was part of the 2010 election project. We utilized a Django database to 
+## collect information from local candidates using web surveys and developed profile pages on the 
+## Review-Journal website to assist readers in making voting decisions.
+#########################################################################################################
+## Parse XML and create the needed Object(s)
+##
+## Configure attribute value types and nodes that need HashMaps
+#########################################################################################################
+##
+## Create lists of attribute value types for integer, string and boolean (comma separated, no spaces)
+#set($intVar = $util.newArrayList)##
+#set($intList = "id,year,placement")##
+#foreach($item in $string.split($intList,","))##
+	#set($foo = $intVar.add($item))##
+#end
+#set($stringVar = $util.newArrayList)##
+#set($stringList = "slug,firstName,middleName,lastName,nickname,suffix,type,name,status,email,qualifications,education,extra")##
+#foreach($item in $string.split($stringList,","))##
+	#set($foo = $stringVar.add($item))##
+#end
+#set($booleanVar = $util.newArrayList)##
+#set($booleanList = "incumbent,useParty")##
+#foreach($item in $string.split($booleanList,","))##
+	#set($foo = $booleanVar.add($item))##
+#end
+##
+#########################################################################################################
+## Parser Loop
+#########################################################################################################
+##
+#set($mtcObjectsArray = $util.newArrayList)##
+#if($pageType == "office" || $pageType == "search")##
+	#set($mtcSecondaryObjectsArray = $util.newArrayList)##
+#end
+#set($doc = $feed.getXMLDocument($parseXML))##
+#set($docElem = $doc.documentElement)##
+## First-level node (mtc)
+#if($docElem.nodeName == "mtc")##
+	#foreach($i in [0..$math.subtract($docElem.attributes.length,1)])##
+		#if($docElem.attributes.item($i).name == "year")##
+			#set($year = $math.newInt($docElem.attributes.item($i).value))##
+		#end
+	#end
+	#if($docElem.childNodes.hasChildNodes())##
+		## Second-level nodes loop
+		#foreach($i in [0..$math.subtract($docElem.childNodes.length,1)])##
+			#if($pageType != "office" || $pageType != "search")##
+				#set($mtcObject = $util.newObject)##
+				#set($foo = $mtcObject.addInt("year", $year))##
+			#end
+			#set($docSecondLevel = $docElem.childNodes.item($i))##
+			#if($docSecondLevel.nodeName != "#text" && $docSecondLevel.nodeName != "searchInfo")##
+				#set($parentNodeName = $docElem.nodeName)##
+				#set($nodeName = $docSecondLevel.nodeName)##
+				#set($nodeAttributes = $docSecondLevel.attributes)##
+				#set($nodeTextContent = $docSecondLevel.textContent)##
+				## Second-level node attributes
+				$string.trim($cms.template("RJ - MTC - XML Attribute Loop"))##
+				#if($pageType == "office" || $pageType == "search")##
+					#set($mtcObjectsArray = $util.newArrayList)##
+					#set($mtcSecondaryObject = $util.newObject)##
+					#set($mtcSecondaryObject = $mtcObject)##
+					#set($foo = $mtcSecondaryObject.addInt("year", $year))##
+				#end
+				#set($hasThirdLevelChild = false)##
+				#if($docSecondLevel.childNodes.hasChildNodes())##
+					## Third-level nodes loop
+					#foreach($i in [0..$math.subtract($docSecondLevel.childNodes.length,1)])##
+						#set($docThirdLevel = $docSecondLevel.childNodes.item($i))##
+						#if($docThirdLevel.nodeName != "#text")##
+							#if($pageType == "office" || $pageType == "search")##
+								#set($mtcObject = $util.newObject)##
+							#end
+							#set($hasThirdLevelChild = true)##
+							#set($nodeName = $docThirdLevel.nodeName)##
+							#set($nodeAttributes = $docThirdLevel.attributes)##
+							#set($nodeTextContent = $docThirdLevel.textContent)##
+							## Set up ArrayLists for fourth-level nodes
+							## Note: if more HashMaps are needed, they must be added to three locations in this template
+							#set($phoneHashMap = $util.newHashMap)##
+							#set($photoHashMap = $util.newHashMap)##
+							#set($imageHashMap = $util.newHashMap)##
+							#set($socialMediaHashMap = $util.newHashMap)##
+							#set($contentItemHashMap = $util.newHashMap)##
+							#set($questionHashMap = $util.newHashMap)##
+							## Third-level node attributes
+							$string.trim($cms.template("RJ - MTC - XML Attribute Loop"))##			
+							#set($hasFourthLevelChild = false)##
+							#if($docThirdLevel.childNodes.hasChildNodes())##
+								## Fourth-level nodes loop
+								#foreach($i in [0..$math.subtract($docThirdLevel.childNodes.length,1)])##
+									#set($docFourthLevel = $docThirdLevel.childNodes.item($i))
+									#if($docFourthLevel.nodeName != "#text")##
+										#set($hasFourthLevelChild = true)##
+										#set($parentNodeName = $docThirdLevel.nodeName)##
+										#set($nodeName = $docFourthLevel.nodeName)##
+										#set($nodeAttributes = $docFourthLevel.attributes)##
+										#set($nodeTextContent = $docFourthLevel.textContent)##
+										## Check for specific fourth-level variables (HashMaps already set-up)										
+										#if("contact-phone" == "${parentNodeName}-${nodeName}")##
+											#set($foo = $phoneHashMap.put($nodeAttributes.item(0).value, $nodeTextContent.toString()))##
+										#elseif("media-photo" == "${parentNodeName}-${nodeName}")##
+											#set($foo = $photoHashMap.put($nodeAttributes.item(1).value, $nodeAttributes.item(0).value))##
+										#elseif("media-image" == "${parentNodeName}-${nodeName}")##
+											#set($foo = $imageHashMap.put($nodeAttributes.item(1).value, $nodeAttributes.item(0).value))##
+										#elseif("profile-socialMedia" == "${parentNodeName}-${nodeName}")##
+											#set($foo = $socialMediaHashMap.put($nodeAttributes.item(0).value, $nodeTextContent.toString()))##
+										#elseif("content-item" == "${parentNodeName}-${nodeName}")##
+											#if($nodeAttributes.item(0).value != "issue")##
+												#set($foo = $contentItemHashMap.put($nodeAttributes.item(1).value, $nodeAttributes.item(0).value))##
+											#end																			
+										#elseif("questionnaire-question" == "${parentNodeName}-${nodeName}")##
+											#set($foo = $questionHashMap.put($nodeAttributes.item(0).value, $nodeTextContent.toString()))##
+										#else##																					
+											
+											## Fourth-level node attributes
+											$string.trim($cms.template("RJ - MTC - XML Attribute Loop"))##
+											#set($hasFifthLevelChild = false)##
+											#if($docFourthLevel.childNodes.hasChildNodes())##
+												## Fourth-level nodes loop
+												#foreach($i in [0..$math.subtract($docFourthLevel.childNodes.length,1)])##
+													#set($docFifthLevel = $docFourthLevel.childNodes.item($i))
+													#if($docFifthLevel.nodeName != "#text")##
+														#set($hasFifthLevelChild = true)##
+														#set($parentNodeName = $docFourthLevel.nodeName)##
+														#set($nodeName = $docFifthLevel.nodeName)##
+														#set($nodeAttributes = $docFifthLevel.attributes)##
+														#set($nodeTextContent = $docFifthLevel.textContent)##
+														## Check for specific fifth-level variables (HashMaps already set-up)										
+														#if("contact-phone" == "${parentNodeName}-${nodeName}")##
+															#set($foo = $phoneHashMap.put($nodeAttributes.item(0).value, $nodeTextContent.toString()))##
+														#elseif("media-photo" == "${parentNodeName}-${nodeName}")##
+															#set($foo = $photoHashMap.put($nodeAttributes.item(1).value, $nodeAttributes.item(0).value))##
+														#elseif("media-image" == "${parentNodeName}-${nodeName}")##
+															#set($foo = $imageHashMap.put($nodeAttributes.item(1).value, $nodeAttributes.item(0).value))##
+														#elseif("profile-socialMedia" == "${parentNodeName}-${nodeName}")##
+															#set($foo = $socialMediaHashMap.put($nodeAttributes.item(0).value, $nodeTextContent.toString()))##
+														#elseif("content-item" == "${parentNodeName}-${nodeName}")##
+															#if($nodeAttributes.item(0).value != "issue")##
+																#set($foo = $contentItemHashMap.put($nodeAttributes.item(1).value, $nodeAttributes.item(0).value))##
+															#end																			
+														#elseif("questionnaire-question" == "${parentNodeName}-${nodeName}")##
+															#set($foo = $questionHashMap.put($nodeAttributes.item(0).value, $nodeTextContent.toString()))##
+														#else##																					
+															## fifth-level node attributes
+															$string.trim($cms.template("RJ - MTC - XML Attribute Loop"))##
+															#if($nodeTextContent && $nodeTextContent.toString() != "")##
+																## Fifth-level node value
+																#set($foo = $mtcObject.addString($nodeName, $nodeTextContent.toString()))##
+															#end
+														#end
+													#end
+												#end										
+											#end
+											## End fifth-level nodes loop
+										#end
+										## Assign HashMaps to object
+										#if(!$phoneHashMap.isEmpty)##
+											#set($foo = $mtcObject.add("contact-phone", $phoneHashMap))##
+										#elseif(!$photoHashMap.isEmpty)##
+											#set($foo = $mtcObject.add("media-photo", $photoHashMap))##
+										#elseif(!$imageHashMap.isEmpty)##
+											#set($foo = $mtcObject.add("media-image", $imageHashMap))##
+										#elseif(!$socialMediaHashMap.isEmpty)##
+											#set($foo = $mtcObject.add("profile-socialMedia", $socialMediaHashMap))##
+										#elseif(!$contentItemHashMap.isEmpty)##
+											#set($foo = $mtcObject.add("content-item", $contentItemHashMap))##
+										#elseif(!$questionHashMap.isEmpty)##
+											#set($foo = $mtcObject.add("questionnaire-question", $questionHashMap))##
+										#elseif(!$hasFifthLevelChild && $docFourthLevel.textContent && $docFourthLevel.textContent.toString() != "")##
+											## Fourth-level node value
+											#set($foo = $mtcObject.addString($docFourthLevel.nodeName, $docFourthLevel.textContent.toString()))##
+										#end
+									#end
+								#end
+								## End fourth-level node loop
+							#end
+							#if($pageType == "office" || $pageType == "search")##
+								#set($foo = $mtcObjectsArray.add($mtcObject))##
+								#set($objectArrayName = "${docThirdLevel.nodeName}Array")##
+							#end
+							## Assign HashMaps to object
+							#if(!$phoneHashMap.isEmpty)##
+								#set($foo = $mtcObject.add("contact-phone", $phoneHashMap))##
+							#elseif(!$photoHashMap.isEmpty)##
+								#set($foo = $mtcObject.add("media-photo", $photoHashMap))##
+							#elseif(!$imageHashMap.isEmpty)##
+								#set($foo = $mtcObject.add("media-image", $imageHashMap))##
+							#elseif(!$socialMediaHashMap.isEmpty)##
+								#set($foo = $mtcObject.add("profile-socialMedia", $socialMediaHashMap))##
+							#elseif(!$contentItemHashMap.isEmpty)##
+								#set($foo = $mtcObject.add("content-item", $contentItemHashMap))##
+							#elseif(!$questionHashMap.isEmpty)##
+								#set($foo = $mtcObject.add("questionnaire-question", $questionHashMap))##
+							#elseif(!$hasFourthLevelChild && $docThirdLevel.textContent && $docThirdLevel.textContent.toString() != "")##
+								## Third-level node value
+								#set($foo = $mtcObject.addString($docThirdLevel.nodeName, $docThirdLevel.textContent.toString()))##
+							#end
+						#end
+					#end
+					## End third-level node loop
+				#end
+				#if(!$hasThirdLevelChild && $docSecondLevel.textContent && $docSecondLevel.textContent.toString() != "")##
+					## Second-level node value
+					#set($foo = $mtcObject.addString($docSecondLevel.nodeName, $docSecondLevel.textContent.toString()))##
+				#end
+				#if($pageType == "office" || $pageType == "search")##
+					#set($foo = $mtcSecondaryObject.addArrayList($objectArrayName, $mtcObjectsArray))##
+					#set($foo = $mtcSecondaryObjectsArray.add($mtcSecondaryObject))##
+					##set($foo = $mtcObjectsArray.clear())##	
+				#else##
+					#set($foo = $mtcObjectsArray.add($mtcObject))##
+				#end
+			#end
+			#set($mtcObject = "")##
+		#end
+		## End second-level node loop
+	#end
+#else##
+	#set($errorPage = true)##
+#end
+#if($pageType == "office" || $pageType == "search")##
+	#set($mtcObjectsArray = $mtcSecondaryObjectsArray)##
+#end
+##
+#########################################################################################################

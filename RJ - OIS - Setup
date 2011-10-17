@@ -1,0 +1,164 @@
+#########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+## Note: this template is incomplete and currently under development
+##
+## A setup template for the OIS project on the Las Vegas Review-Journal website. This template identifies 
+## the page through a parameter added using URL rewrite and provides the necessary variables and 
+## Arrayists to display the pages' content. The incident and search pages both use a JSON parser to get 
+## content from the OIS project database developed in Django. Creating setup templates helps keep most of 
+## the logic separate from the HTML code.
+#########################################################################################################
+## Debug
+## #set($searchDebug = true)##
+##
+## Get page type
+#if($req.param("pageType") && $req.param("pageType") != "")##
+	#set($pageType = $req.param("pageType"))##
+	#set($key = "######################################")##
+#end
+## Setup per page type
+#if($pageType == "advanced-search")##
+	## Add page JS	
+	#set($foo = $jsTemplates.add("jquery.ois-advanced-search.min.js"))##
+	#set($urlSearchParams = $util.newHashMap)
+	#foreach($paramName in $req.params)
+		#set($foo = $urlSearchParams.put($paramName,$req.paramValues($paramName)))##
+	#end
+#elseif($pageType == "search")##
+	## Add page JS
+	#set($foo = $jsTemplates.add("google-maps-api?sensor=false"))##
+	#set($foo = $jsTemplates.add("jquery.gmap-ui.min.js"))##	
+	$string.trim($cms.template("RJ - OIS Search Query"))##
+	## Build JSON URL
+	#set($jsonSearchURL = "###################################${jsonURLQuery}")##
+	## Build previous search URL
+	#set($prevSearchURL = "${domainString}/news/deadly-force/advanced-search/?${searchURLQuery}")##
+	## Parse JSON
+	#set($strSearchResultsJSON = $util.getURLWithTimeout($jsonSearchURL,20))##
+	#set($objSearchResultsJSON = $jsonParser.parseJSON($strSearchResultsJSON))
+	#set($jsonBase = $objSearchResultsJSON.names().get(0))##
+	#if($jsonBase == "incidentResults")##
+		#set($resultsJSONArray = $objSearchResultsJSON.get($jsonBase))##
+	#end
+	#if($math.newInt($resultsJSONArray.length()) > 0)##
+		#set($numResults = $resultsJSONArray.length())##
+	#else##
+		#set($numResults = 0)##
+	#end
+	#if($objSearchResultsJSON.totalIncidents && !$util.isNull($objSearchResultsJSON.totalIncidents) && $math.newInt($objSearchResultsJSON.totalIncidents) > 0)##
+		#set($totalNumResults = $math.newInt($objSearchResultsJSON.totalIncidents))##
+	#end
+	#if($objSearchResultsJSON.error && !$util.isNull($objSearchResultsJSON.error))##
+		#if($math.newInt($objSearchResultsJSON.error) == 204)##
+			#set($errorMessage = "Sorry, there are no results for this search. Please try <a href=${quote}$!{domainString}/news/deadly-force/advanced-search${quote}>another search</a>.")##
+		#elseif($math.newInt($objSearchResultsJSON.error) == 400)##
+			#set($errorMessage = "Sorry, we experienced a problem with this search. This problem has been reported to the website administrator. Please try <a href=${quote}$!{domainString}/news/deadly-force/advanced-search${quote}>another search</a>.")##
+		#end
+		#set($errorEmail = $util.newEmail)##
+		$errorEmail.setTo("###############################")##
+		$errorEmail.setFrom("###############################")##
+		##$errorEmail.setCC("tcarpenter@reviewjournal.com, lmower@reviewjournal.com")##
+		$errorEmail.setSubject("OIS search error: $objSearchResultsJSON.error - $objSearchResultsJSON.message")
+		$errorEmail.addLine("Details about the search error.<br /><br />")##
+		$errorEmail.addLine("<b>Search URLs</b><br />")##
+		$errorEmail.addLine("Search form selections:<br />${prevSearchURL}<br /><br />")##
+		$errorEmail.addLine("Search results:<br />${domainString}/news/deadly-force/search/?${searchURLQuery}<br /><br />")##
+		$errorEmail.addLine("JSON feed:<br />${jsonSearchURL}<br /><br />")##
+		$errorEmail.addLine("<b>Search Parameters</b><br />")##
+		#if($queryErrorArray.size() > 0)##
+			#foreach($errorParam in $queryErrorArray)##
+				$errorEmail.addLine("${util.encode.html($errorParam)}<br />")##
+			#end
+		#else##
+			$errorEmail.addLine("Sorry, there is a problem display the list of query parameters.<br />")##
+		#end
+		$errorEmail.addLine("<br /><i>Have a nice day!</i>")##
+		$errorEmail.sendHTML##		
+	#end
+
+	## Temporary for query testing
+	Number of results: $math.newInt($resultsJSONArray.length())<br /><br />
+	JSON Search URL: $jsonSearchURL<br /><br />
+#elseif($pageType == "incident")##
+	## Assign incident ID
+	#if($req.param("incidentID") && $math.newInt($req.param("incidentID")) > 0)##
+		#set($incidentID = $req.param("incidentID"))##
+	#end
+	## Create new ArrayLists
+	#set($lessLethalForceArray = $util.newArrayList)##	
+	#set($incidentInvolvingArray = $util.newArrayList)##
+	#set($incidentContentObjArray = $util.newArrayList)##
+	#set($incidentSubjectObjArray = $util.newArrayList)##
+	#set($incidentOfficerObjArray = $util.newArrayList)##
+	## Add page JS
+	#set($foo = $jsTemplates.add("google-maps-api?sensor=false"))##
+	#set($foo = $jsTemplates.add("jquery.gmap-ui.min.js"))##
+	## Build JSON URL
+	#set($jsonSearchURL = "#######################################################${incidentID},key=${key}")##
+	JSON Incident URL: $jsonSearchURL<br /><br />
+	## Parse JSON
+	#set($strIncidentJSON = $util.getURLWithTimeout($jsonSearchURL,20))##
+	#set($objIncidentJSON = $jsonParser.parseJSON($strIncidentJSON))##
+	## Create incident variables and arrays
+	#if($math.newInt($incidentID) == $math.newInt($objIncidentJSON.id))##
+		#if($objIncidentJSON.dateTime && !$util.isNull($objIncidentJSON.dateTime))##
+			#set($incidentDateTime = $util.parseDate($objIncidentJSON.dateTime,"yyyy-MM-dd'T'HH:mm:ss"))##
+		#end
+		#if($objIncidentJSON.location && !$util.isNull($objIncidentJSON.location))##
+			#set($incidentLocation = $util.encode.form($objIncidentJSON.location))##
+		#end
+		#if($objIncidentJSON.latitude && !$util.isNull($objIncidentJSON.latitude))##
+			#set($incidentLatitude = $objIncidentJSON.latitude)##
+		#end
+		#if($objIncidentJSON.longitude && !$util.isNull($objIncidentJSON.longitude))##
+			#set($incidentLongitude = $objIncidentJSON.longitude)##
+		#end
+		#if($objIncidentJSON.incidentType && !$util.isNull($objIncidentJSON.incidentType))##
+			#set($incidentType = $util.encode.form($objIncidentJSON.incidentType))##
+		#end
+		#if($objIncidentJSON.summary && !$util.isNull($objIncidentJSON.summary))##
+			#set($incidentSummary = $util.encode.form($string.trim($objIncidentJSON.summary)))##
+		#end
+		#if($objIncidentJSON.totalShotsFired && !$util.isNull($objIncidentJSON.totalShotsFired))##
+			#set($incidentTotalShotsFired = $math.newInt($string.trim($objIncidentJSON.totalShotsFired)))##
+		#end
+		#if($objIncidentJSON.shotsHitSubject && !$util.isNull($objIncidentJSON.shotsHitSubject))##
+			#set($incidentShotsHitSubject = $math.newInt($string.trim($objIncidentJSON.shotsHitSubject)))##
+		#end
+		#if($objIncidentJSON.incidentInvolving && !$util.isNull($objIncidentJSON.incidentInvolving))##
+			#foreach($incidentInvolvingKey in [0..$math.subtract($objIncidentJSON.incidentInvolving.length(),1)])##
+				#if($objIncidentJSON.incidentInvolving.get($incidentInvolvingKey).type)##
+					#set($foo = $incidentInvolvingArray.add($util.encode.form($objIncidentJSON.incidentInvolving.get($incidentInvolvingKey).type)))##
+				#end
+			#end
+		#end
+		#if($objIncidentJSON.initialContact && !$util.isNull($objIncidentJSON.initialContact))##
+			#set($incidentInitialContact = $util.encode.form($objIncidentJSON.initialContact))##
+		#end
+		#if($objIncidentJSON.inquestResult && !$util.isNull($objIncidentJSON.inquestResult))##
+			#set($incidentInquestResult = $util.encode.form($objIncidentJSON.inquestResult))##
+		#end
+		#if($objIncidentJSON.lessLethalForce && !$util.isNull($objIncidentJSON.lessLethalForce))##
+			#foreach($lessLethalForceKey in [0..$math.subtract($objIncidentJSON.lessLethalForce.length(),1)])##
+				#if($objIncidentJSON.lessLethalForce.get($lessLethalForceKey).type)##
+					#set($foo = $lessLethalForceArray.add($util.encode.form($objIncidentJSON.lessLethalForce.get($lessLethalForceKey).type)))##
+				#end
+			#end
+		#end
+		#if($objIncidentJSON.content && !$util.isNull($objIncidentJSON.content))##
+			#foreach($contentKey in [0..$math.subtract($objIncidentJSON.content.length(),1)])##
+				#set($foo = $incidentContentObjArray.add($objIncidentJSON.content.get($contentKey)))##
+			#end
+		#end		
+		#if($objIncidentJSON.shootingSubject && !$util.isNull($objIncidentJSON.shootingSubject))##
+			#foreach($shootingSubjectKey in [0..$math.subtract($objIncidentJSON.shootingSubject.length(),1)])##
+				#set($foo = $incidentSubjectObjArray.add($objIncidentJSON.shootingSubject.get($shootingSubjectKey)))##
+			#end		
+		#end
+		#if($objIncidentJSON.officer && !$util.isNull($objIncidentJSON.officer))##
+			#foreach($officerKey in [0..$math.subtract($objIncidentJSON.officer.length(),1)])##
+				#set($foo = $incidentOfficerObjArray.add($objIncidentJSON.officer.get($officerKey)))##
+			#end		
+		#end
+	#end
+#end

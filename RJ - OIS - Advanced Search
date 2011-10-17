@@ -1,0 +1,1001 @@
+#########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+## Note: this template is currently under development
+##
+## The search template the appears in the #content-main container of the advanced search page for the OIS 
+## project on the Las Vegas Review-Journal website. This template creates the search field options and 
+## reads the URL parameters for field options to pre-select if a user wants to return to a form with the 
+previous search options selected.
+#########################################################################################################
+				<div id="advanced-search">
+					<p>Vivamus eros leo, eleifend sit amet imperdiet sed, commodo sit amet urna. Proin at nunc lectus, eu lobortis enim. Aenean eget orci nunc. Nulla facilisi.</p>
+		
+					<form id="searchForm" method="get" action="${domainString}/news/deadly-force/search/">
+						<div id="incident-fields">
+							<h4>Incident Information</h4>
+							<div class="left-column rj-grid-10 rj-alpha">
+								<div id="dateRange" class="field-group validateRange">
+#set($paramName = "startDate")##
+#if($req.param($paramName) && $req.param($paramName) != "")##
+	#set($defaultValue = " value=${quote}${util.encode.unURL($req.param($paramName))}${quote}")##
+#else##
+	#set($defaultValue = "")##
+#end
+
+									<label for="$!{paramName}" class="title">Date:</label>
+									<input type="text" id="$!{paramName}" class="rulesDateRange" name="$!{paramName}"$!{defaultValue} />
+#set($paramName = "endDate")##
+#if($req.param($paramName) && $req.param($paramName) != "")##
+	#set($defaultValue = " value=${quote}${util.encode.unURL($req.param($paramName))}${quote}")##
+#else##
+	#set($defaultValue = "")##
+#end
+
+									<label for="$!{paramName}">to</label>
+									<input type="text" id="$!{paramName}" class="rulesDateRange" name="$!{paramName}"$!{defaultValue} />
+								</div>
+								<div id="timeRange" class="field-group">
+#set($paramName = "startTime")##
+#if($req.param($paramName) && $req.param($paramName) != "")##
+	#set($defaultValue = " value=${quote}${util.encode.unURL($req.param($paramName))}${quote}")##
+#else##
+	#set($defaultValue = "")##
+#end
+
+									<label for="$!{paramName}" class="title">Time:</label>
+									<input type="text" id="$!{paramName}" name="$!{paramName}"$!{defaultValue} />
+#set($paramName = "endTime")##
+#if($req.param($paramName) && $req.param($paramName) != "")##
+	#set($defaultValue = " value=${quote}${util.encode.unURL($req.param($paramName))}${quote}")##
+#else##
+	#set($defaultValue = "")##
+#end
+
+									<label for="$!{paramName}">to</label>
+									<input type="text" id="$!{paramName}" name="$!{paramName}"$!{defaultValue} />
+								</div>
+								<div id="dayOfWeek" class="field-group">
+									<label class="title">Day of week:</label>
+									<ul>
+#set($paramName = "dayOfWeek")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " checked=$!{quote}yes$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+
+										<li><input type="checkbox" id="${paramName}-${velocityCount}" name="${paramName}" value="${fieldValue}"$!{selected} /><label for="${paramName}-${velocityCount}">${fieldValue}</label></li>
+#end
+									</ul>
+								</div>
+								<div id="officersInvolved" class="field-group validateRange">
+									<label for="minNumOfficers" class="title">Number of officers involved:</label>
+									<select id="minNumOfficers" class="rulesOfficersInvolvedRange" name="minNumOfficers">
+#set($paramName = "minNumOfficers")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["",1,2,3,4,5,6,7,8,9])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "--")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+									<label for="maxNumOfficers">to</label>
+									<select id="maxNumOfficers" class="rulesOfficersInvolvedRange" name="maxNumOfficers">
+#set($paramName = "maxNumOfficers")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["",1,2,3,4,5,6,7,8,9,99])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "--")##
+	#elseif($fieldValue == 99)##
+		#set($displayValue = "10+")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+								</div>
+								<div id="officerAgency" class="field-group">
+									<label class="title">Agencies involved:</label>
+									<ul>
+#set($paramName = "officerAgency")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["Boulder City Police Department","Clark County School District Police","Federal Bureau of Investigation","Federal Corrections","Henderson Police Department","Las Vegas Metropolitan Police Department","Nevada Highway Patrol","North Las Vegas Police Department","Private security","U.S. Fish and Wildlife Service","U.S. Marshals Service"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " checked=$!{quote}yes$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+
+										<li><input type="checkbox" id="${paramName}-${velocityCount}" name="${paramName}" value="${fieldValue}"$!{selected} /><label for="${paramName}-${velocityCount}">${fieldValue}</label></li>
+#end
+									</ul>
+								</div>
+								<div id="totalShotsFired" class="field-group validateRange">
+									<label for="minTotalShotsFired" class="title">Total shots fired: <span class="tooltip">[?]</span></label>
+									<select id="minTotalShotsFired" class="rulesTotalShotsFired" name="minTotalShotsFired">
+#set($paramName = "minTotalShotsFired")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["",1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "--")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+									<label for="maxTotalShotsFired">to</label>
+									<select id="maxTotalShotsFired" class="rulesTotalShotsFired" name="maxTotalShotsFired">
+#set($paramName = "maxTotalShotsFired")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["",1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,99])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "--")##
+	#elseif($fieldValue == 99)##
+		#set($displayValue = "20+")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+								</div>
+								<div id="shotsHitSubject" class="field-group validateRange">
+									<label for="minShotsHitSubject" class="title">Shots that hit subject(s): <span class="tooltip">[?]</span></label>
+									<select id="minShotsHitSubject" class="rulesShotsHitSubject" name="minShotsHitSubject">
+#set($paramName = "minShotsHitSubject")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["",0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "--")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+									<label for="maxShotsHitSubject">to</label>
+									<select id="maxShotsHitSubject" class="rulesShotsHitSubject" name="maxShotsHitSubject">
+#set($paramName = "maxShotsHitSubject")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["",0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,99])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "--")##
+	#elseif($fieldValue == 99)##
+		#set($displayValue = "20+")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+								</div>
+								<div id="initialContact" class="field-group">
+									<label class="title">Source of initial contact: <span class="tooltip">[?]</span></label>
+									<ul>
+#set($paramName = "initialContact")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["Call","Self-initiated","Serving warrant","Traffic stop","Investigation","Citizen contact","Other"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " checked=$!{quote}yes$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+
+										<li><input type="checkbox" id="${paramName}-${velocityCount}" name="${paramName}" value="${fieldValue}"$!{selected} /><label for="${paramName}-${velocityCount}">${fieldValue}</label></li>
+#end
+									</ul>
+								</div>
+							</div>
+						
+							<div class="right-column rj-grid-10 rj-omega">
+								<div id="callType" class="field-group">
+									<label class="title">Call type:</label>
+									<ul>
+#set($paramName = "callType")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["Assault or battery with a gun or other weapon","Burglary or burglary alarm","Family or domestic disturbance","Homicide","Illegal shooting","Mentally ill person","Person with a gun, knife or other weapon","Prowler","Robbery or robbery alarm","Stolen vehicle","Suicide or suicide attempt","Unknown trouble or 911 disconnect","None","Other"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " checked=$!{quote}yes$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+
+										<li><input type="checkbox" id="${paramName}-${velocityCount}" name="${paramName}" value="${fieldValue}"$!{selected} /><label for="${paramName}-${velocityCount}">${fieldValue}</label></li>
+#end
+									</ul>
+								</div>
+								<div id="incidentType" class="field-group">
+									<label class="title">Incident type:</label>
+									<ul>
+#set($paramName = "incidentType")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["Non-fatal","Homicide","Suicide"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " checked=$!{quote}yes$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+
+										<li><input type="checkbox" id="${paramName}-${velocityCount}" name="${paramName}" value="${fieldValue}"$!{selected} /><label for="${paramName}-${velocityCount}">${fieldValue}</label></li>
+#end
+									</ul>
+								</div>
+								<div id="inquestResult" class="field-group">
+									<label class="title">Inquest result:</label>
+									<ul>
+#set($paramName = "inquestResult")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["Criminal","Excusable","Justifiable","Suicide"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " checked=$!{quote}yes$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+
+										<li><input type="checkbox" id="${paramName}-${velocityCount}" name="${paramName}" value="${fieldValue}"$!{selected} /><label for="${paramName}-${velocityCount}">${fieldValue}</label></li>
+#end
+									</ul>
+								</div>
+								<div id="incidentInvolving" class="field-group">
+									<label class="title">Incidents involving: <span class="tooltip">[?]</span></label>
+									<ul>
+#set($paramName = "incidentInvolving")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["Accidental discharge","Car pursuit","Foot pursuit","Suspect fired","Physical struggle"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " checked=$!{quote}yes$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+
+										<li><input type="checkbox" id="${paramName}-${velocityCount}" name="${paramName}" value="${fieldValue}"$!{selected} /><label for="${paramName}-${velocityCount}">${fieldValue}</label></li>
+#end
+									</ul>
+								</div>
+								<div id="lessLethalForce" class="field-group">
+									<label class="title">Less-than lethal force used: <span class="tooltip">[?]</span></label>
+									<ul>
+#set($paramName = "lessLethalForce")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["any","Taser","Pepper Spray","Baton or Nightstick","Flashbang","Dog","Rubber Bullets","Gas","Low-lethal Shotgun","Other"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " checked=$!{quote}yes$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "any")##
+		#set($displayValue = "Any less lethal force")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<li><input type="checkbox" id="${paramName}-${velocityCount}" name="${paramName}" value="${fieldValue}"$!{selected} /><label for="${paramName}-${velocityCount}">${displayValue}</label></li>
+#end
+									</ul>
+								</div>
+							</div>
+						</div>
+						<div id="officer-fields">
+							<h4>Officer(s) Involved</h4>
+							<div class="left-column rj-grid-10 rj-alpha">
+								<div id="officerAge" class="field-group validateRange">
+									<label for="minOfficerAge" class="title">Age:</label>
+									<select id="minOfficerAge" class="rulesOfficerAge" name="minOfficerAge">
+#set($paramName = "minOfficerAge")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["",18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "--")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+									<label for="maxOfficerAge">to</label>
+									<select id="maxOfficerAge" class="rulesOfficerAge" name="maxOfficerAge">
+#set($paramName = "maxOfficerAge")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["",18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,99])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "--")##
+	#elseif($fieldValue == 99)##
+		#set($displayValue = "50+")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+								</div>
+
+								<div id="officerRace" class="field-group">
+									<label class="title">Race/Ethnicity:</label>
+									<ul>
+#set($paramName = "officerRace")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["Asian","Black","Hispanic","Mixed","Native American","White"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " checked=$!{quote}yes$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+
+										<li><input type="checkbox" id="${paramName}-${velocityCount}" name="${paramName}" value="${fieldValue}"$!{selected} /><label for="${paramName}-${velocityCount}">${fieldValue}</label></li>
+#end
+									</ul>
+								</div>
+								<div id="officerGenderOptions" class="field-group">
+									<label for="officerGender" class="title">Gender:</label>
+									<select id="officerGender" name="officerGender">
+#set($paramName = "officerGender")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["","Male","Female"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "---------")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+								</div>
+								<div id="officerYearsForce" class="field-group validateRange">
+									<label for="minOfficerYearsForce" class="title">Years on force: <span class="tooltip">[?]</span></label>
+									<select id="minOfficerYearsForce" class="rulesOfficerYearsForce" name="minOfficerYearsForce">
+#set($paramName = "minOfficerYearsForce")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["","less than 1",1,2,3,4,5,6,7,8,9])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "--")##
+	#elseif($fieldValue == "less than 1")##
+		#set($displayValue = "<1")##	
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+									<label for="maxOfficerYearsForce">to</label>
+									<select id="maxOfficerYearsForce" class="rulesOfficerYearsForce" name="maxOfficerYearsForce">
+#set($paramName = "maxOfficerYearsForce")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["","less than 1",1,2,3,4,5,6,7,8,9,99])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "--")##
+	#elseif($fieldValue == "less than 1")##
+		#set($displayValue = "<1")##
+	#elseif($fieldValue == 99)##
+		#set($displayValue = "10+")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+								</div>
+							</div>
+							
+							<div class="right-column rj-grid-10 rj-omega">
+								<div id="officerRankOptions" class="field-group">
+									<label class="title">Rank: <span class="tooltip">[?]</span></label>
+									<select id="officerRank" name="officerRank">
+#set($paramName = "officerRank")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["","Captain or above","Lieutenant","Sergeant","Officer"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "---------")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+								</div>
+								<div id="officerAreaCommandOptions" class="field-group">
+									<label class="title">Area command or section:</label>
+									<select id="officerAreaCommand" name="officerAreaCommand">
+#set($paramName = "officerAreaCommand")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["","Airport Bureau","Bolden Area Command","Canine Unit","Convention Center Area Command","Corrections","Downtown Area Command","Enterprise or Southwest Area Command","Financial and Property Crimes Bureau","Gang Crimes Bureau","Homicide Section","Northeast Area Command","Northwest Area Command","Repeat Offender Program","Resident Officer","Robbery Section","Saturation Team","Search and Rescue","Sexual Assault Detail","South Central Area Command","Southeast Area Command","SWAT","Traffic Bureau","Vice and Narcotics Bureau"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "---------")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+								</div>
+								<div id="officerPlainClothesOptions" class="field-group">
+									<label for="officerPlainClothes" class="title">Officer in plainclothes: <span class="tooltip">[?]</span></label>
+									<select id="officerPlainClothes" name="officerPlainClothes">
+#set($paramName = "officerPlainClothes")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["","true","false"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "--")##
+	#elseif($fieldValue == "true")##
+		#set($displayValue = "Yes")##
+	#elseif($fieldValue == "false")##
+		#set($displayValue = "No")##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+								</div>
+								<div id="officerInjury" class="field-group">
+									<label class="title">Officer injury: <span class="tooltip">[?]</span></label>
+									<ul>
+#set($paramName = "officerInjury")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["Shot","Other injuries"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " checked=$!{quote}yes$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+
+										<li><input type="checkbox" id="${paramName}-${velocityCount}" name="${paramName}" value="${fieldValue}"$!{selected} /><label for="${paramName}-${velocityCount}">${fieldValue}</label></li>
+#end
+									</ul>
+								</div>
+								<div id="officerShotsFired" class="field-group validateRange">
+									<label for="minOfficerShotsFired" class="title">Shots fired:</label>
+									<select id="minOfficerShotsFired" class="rulesOfficerShotsFired" name="minOfficerShotsFired">
+#set($paramName = "minOfficerShotsFired")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["",1,2,3,4,5,6,7,8,9])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "--")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+									<label for="maxOfficerShotsFired">to</label>
+									<select id="maxOfficerShotsFired" class="rulesOfficerShotsFired" name="maxOfficerShotsFired">
+#set($paramName = "maxOfficerShotsFired")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["",1,2,3,4,5,6,7,8,9,99])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "--")##
+	#elseif($fieldValue == 99)##
+		#set($displayValue = "10+")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+								</div>
+							</div>
+						</div>
+						<div id="shooting-subject-fields">
+							<h4>Shooting Subject</h4>
+			
+							<div class="left-column rj-grid-10 rj-alpha">
+								<div id="subjectAge" class="field-group validateRange">
+									<label for="minSubjectAge" class="title">Age:</label>
+									<select id="minSubjectAge" class="rulesSubjectAge" name="minSubjectAge">
+#set($paramName = "minSubjectAge")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["",13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "--")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+									<label for="maxSubjectAge">to</label>
+									<select id="maxSubjectAge" class="rulesSubjectAge" name="maxSubjectAge">
+#set($paramName = "maxSubjectAge")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["",13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,99])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "--")##
+	#elseif($fieldValue == 99)##
+		#set($displayValue = "50+")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+								</div>
+
+								<div id="subjectRace" class="field-group">
+									<label class="title">Race/Ethnicity:</label>
+									<ul>
+#set($paramName = "subjectRace")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["Asian","Black","Hispanic","Mixed","Native American","White"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " checked=$!{quote}yes$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+
+										<li><input type="checkbox" id="${paramName}-${velocityCount}" name="${paramName}" value="${fieldValue}"$!{selected} /><label for="${paramName}-${velocityCount}">${fieldValue}</label></li>
+#end
+									</ul>
+								</div>
+								
+								<div id="subjectGenderOptions" class="field-group">
+									<label for="subjectGender" class="title">Gender:</label>
+									<select id="subjectGender" name="subjectGender">
+#set($paramName = "subjectGender")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["","Male","Female"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "---------")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+								</div>		
+			
+								<div id="subjectHomeStateOptions" class="field-group">
+									<label for="subjectHomeState" class="title">Hometown state:</label>
+									<select id="subjectHomeState" name="subjectHomeState">
+#set($paramName = "subjectHomeState")##
+#set($fieldOptionsHashMap = $util.newHashMap)
+#set($foo = $fieldOptionsHashMap.put("","---------"))##
+#set($foo = $fieldOptionsHashMap.put("AL","Alabama"))##
+#set($foo = $fieldOptionsHashMap.put("AK","Alaska"))##
+#set($foo = $fieldOptionsHashMap.put("AS","American Samoa"))##
+#set($foo = $fieldOptionsHashMap.put("AZ","Arizona"))##
+#set($foo = $fieldOptionsHashMap.put("AR","Arkansas"))##									
+#set($foo = $fieldOptionsHashMap.put("CA","California"))##
+#set($foo = $fieldOptionsHashMap.put("CO","Colorado"))##
+#set($foo = $fieldOptionsHashMap.put("CT","Connecticut"))##
+#set($foo = $fieldOptionsHashMap.put("DE","Delaware"))##
+#set($foo = $fieldOptionsHashMap.put("DC","District of Columbia"))##
+#set($foo = $fieldOptionsHashMap.put("FL","Florida"))##
+#set($foo = $fieldOptionsHashMap.put("GA","Georgia"))##
+#set($foo = $fieldOptionsHashMap.put("GU","Guam"))##
+#set($foo = $fieldOptionsHashMap.put("HI","Hawaii"))##			
+#set($foo = $fieldOptionsHashMap.put("ID","Idaho"))##
+#set($foo = $fieldOptionsHashMap.put("IL","Illinois"))##
+#set($foo = $fieldOptionsHashMap.put("IN","Indiana"))##
+#set($foo = $fieldOptionsHashMap.put("IA","Iowa"))##
+#set($foo = $fieldOptionsHashMap.put("KS","Kansas"))##
+#set($foo = $fieldOptionsHashMap.put("KY","Kentucky"))##
+#set($foo = $fieldOptionsHashMap.put("LA","Louisiana"))##
+#set($foo = $fieldOptionsHashMap.put("ME","Maine"))##
+#set($foo = $fieldOptionsHashMap.put("MD","Maryland"))##
+#set($foo = $fieldOptionsHashMap.put("MA","Massachusetts"))##
+#set($foo = $fieldOptionsHashMap.put("MI","Michigan"))##
+#set($foo = $fieldOptionsHashMap.put("MN","Minnesota"))##
+#set($foo = $fieldOptionsHashMap.put("MS","Mississippi"))##
+#set($foo = $fieldOptionsHashMap.put("MO","Missouri"))##
+#set($foo = $fieldOptionsHashMap.put("MT","Montana"))##
+#set($foo = $fieldOptionsHashMap.put("NE","Nebraska"))##
+#set($foo = $fieldOptionsHashMap.put("NV","Nevada"))##
+#set($foo = $fieldOptionsHashMap.put("NH","New Hampshire"))##
+#set($foo = $fieldOptionsHashMap.put("NJ","New Jersey"))##
+#set($foo = $fieldOptionsHashMap.put("NM","New Mexico"))##
+#set($foo = $fieldOptionsHashMap.put("NY","New York"))##
+#set($foo = $fieldOptionsHashMap.put("NC","North Carolina"))##
+#set($foo = $fieldOptionsHashMap.put("ND","North Dakota"))##
+#set($foo = $fieldOptionsHashMap.put("MP","Northern Mariana Islands"))##
+#set($foo = $fieldOptionsHashMap.put("OH","Ohio"))##
+#set($foo = $fieldOptionsHashMap.put("OK","Oklahoma"))##
+#set($foo = $fieldOptionsHashMap.put("OR","Oregon"))##
+#set($foo = $fieldOptionsHashMap.put("PA","Pennsylvania"))##
+#set($foo = $fieldOptionsHashMap.put("PR","Puerto Rico"))##
+#set($foo = $fieldOptionsHashMap.put("RI","Rhode Island"))##
+#set($foo = $fieldOptionsHashMap.put("SC","South Carolina"))##
+#set($foo = $fieldOptionsHashMap.put("SD","South Dakota"))##
+#set($foo = $fieldOptionsHashMap.put("TN","Tennessee"))##
+#set($foo = $fieldOptionsHashMap.put("TX","Texas"))##
+#set($foo = $fieldOptionsHashMap.put("UT","Utah"))##
+#set($foo = $fieldOptionsHashMap.put("VT","Vermont"))##
+#set($foo = $fieldOptionsHashMap.put("VI","Virgin Islands"))##
+#set($foo = $fieldOptionsHashMap.put("VA","Virginia"))##
+#set($foo = $fieldOptionsHashMap.put("WA","Washington"))##
+#set($foo = $fieldOptionsHashMap.put("WV","West Virginia"))##
+#set($foo = $fieldOptionsHashMap.put("WI","Wisconsin"))##
+#set($foo = $fieldOptionsHashMap.put("WY","Wyoming"))##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $util.sort($fieldOptionsHashMap.keySet,"toString"))##
+	#set($displayValue = $fieldOptionsHashMap.get($fieldValue))##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+								</div>
+							</div>
+							
+							<div class="right-column rj-grid-10 rj-omega">
+								<div id="subjectArrestHistoryOptions" class="field-group">
+									<label for="subjectArrestHistory" class="title">Arrest history: <span class="tooltip">[?]</span></label>
+									<select id="subjectArrestHistory" name="subjectArrestHistory">
+#set($paramName = "subjectArrestHistory")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["","None or unknown","Known"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "---------")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>
+								</div>
+
+								<div id="subjectMentalState" class="field-group">
+									<label class="title">Mental state: <span class="tooltip">[?]</span></label>
+									<ul>
+#set($paramName = "subjectMentalState")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["Assaulted others","Mentally ill","Suicidal"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " checked=$!{quote}yes$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+
+										<li><input type="checkbox" id="${paramName}-${velocityCount}" name="${paramName}" value="${fieldValue}"$!{selected} /><label for="${paramName}-${velocityCount}">${fieldValue}</label></li>
+#end
+									</ul>
+								</div>
+
+								<div id="subjectWeaponOptions" class="field-group">
+									<label for="subjectWeapon" class="title">Weapon:</label>
+									<select id="subjectWeapon" name="subjectWeapon">
+#set($paramName = "subjectWeapon")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["","BB or toy gun","Handgun","Knife or sword","Long gun","Reached for or grabbed officer weapon","Vehicle","Other","Nothing"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "---------")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>			
+								</div>
+
+								<div id="subjectToxicologyOptions" class="field-group">
+									<label for="subjectToxicology" class="title">Toxicology:</label>
+									<select id="subjectToxicology" name="subjectToxicology">
+#set($paramName = "subjectToxicology")##
+#set($fieldOptionsArray = $util.newArrayList)##
+#set($fieldOptionsArray = ["","Alcohol","Cocaine","Marijuana","Methamphetamine","PCP","Prescription drugs","Other","Unknown or unspecified"])##
+#set($paramArray = $util.newArrayList)##
+#foreach($param in $req.paramValues($paramName))##
+	#set($foo = $paramArray.add($util.encode.unURL($param)))##
+#end
+#foreach($fieldValue in $fieldOptionsArray)##
+	#if($paramArray.contains("$fieldValue"))##
+		#set($selected = " selected=$!{quote}selected$!{quote}")##
+	#else##
+		#set($selected = "")##	
+	#end
+	#if($fieldValue == "")##
+		#set($displayValue = "---------")##
+	#else##
+		#set($displayValue = $fieldValue)##
+	#end
+
+										<option value="${fieldValue}"$!{selected}>${displayValue}</option>
+#end
+									</select>			
+								</div>
+							</div>
+						</div>
+						<input id="submit" type="submit" value="Submit" />
+					</form>
+				</div>
