@@ -1,4 +1,12 @@
-########################################################################################################
+#########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+##
+## This is an example of a module template used on pages of the Las Vegas Review-Journal. This uses
+## the variables and ArrayLists created in RJ - News Story - Setup template and displays the article 
+## content in the #conten-main container of the template framework.
+##
+## More about the template framework: http://shanegammon.com/portfolio/template-framework
+#########################################################################################################
 ## Debug - Setup Templates 
 ## $cms.template("RJ - Setup")##
 ## $cms.template("RJ - News Story - Setup")##

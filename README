@@ -1,1 +1,36 @@
 This repository contains example Apache Velocity template code developed in the Limelight Dynamic Site Platform (formerly Clickability) CMS. ~ Shane Gammon
+
+Framework templates
+* RJ - Framework
+* RJ - [Example Content Type]
+
+Setup templates
+* RJ - Setup
+* RJ - News Story - Setup
+* RJ - XML Setup - media-ssp.xml
+
+Helper templates
+* Format Date/Time
+* RJ - Random
+* Display List Class
+
+Module templates
+* RJ - NDN Video Widgets
+* RJ - News Story - #content-main
+
+XML templates
+* homepage.rss
+* media-ssp.xml
+* ndn-feed.xml
+
+Election 2010 project
+* RJ - MTC - XML Parser (used for Meet the Candidates)
+* RJ - MTC - XML Attribute Loop (used for Meet the Candidates)
+* RJ - Tab Template - Election 2010 (used for voting results)
+* statewide-results.html (used for voting results)
+* top-races-voting-results.html (used for voting results)
+* other-races-voting-results.html (used for voting results)
+
+OIS project
+* RJ - OIS - Setup
+* RJ - OIS - Advanced Search

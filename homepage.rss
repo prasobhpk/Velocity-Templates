@@ -1,3 +1,11 @@
+#########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+##
+## RSS feed of items that appear in the Latest News and Buzzworthy tabs of the homepage. This is used to 
+## automatically share articles with Facebook and Twitter.
+## http://www.lvrj.com/templates/homepage.rss?type=latest-news
+## http://www.lvrj.com/templates/homepage.rss?type=buzzworthy
+#########################################################################################################
 <?xml version="1.0" encoding="UTF-8"?>
 <rss xmlns:taxo="http://purl.org/rss/1.0/modules/taxonomy/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
 #########################################################################################################

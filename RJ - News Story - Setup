@@ -1,4 +1,11 @@
-########################################################################################################
+#########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+##
+## A setup template for article content pages on the Las Vegas Review-Journal. This setup template 
+## declares items such as variables and ArrayLists that are needed for article pages. Most page types 
+## have a similar setup template that is focused to the content on the page. Creating setup templates 
+## helps keep most of the logic separate from the HTML code.
+#########################################################################################################
 ## Setup for Tools column in News Story content pages
 ########################################################################################################
 ## Debug variables

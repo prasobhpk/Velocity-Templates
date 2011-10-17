@@ -1,3 +1,12 @@
+#########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+##
+## The homepage tab template that provided news and updating voting results for the 2010 election. This 
+## template includes the initial request for the two templates on the homepage that regularly updated 
+## using AJAX: top-races-voting-results.html and other-races-voting-results.html
+## 
+## Example of Election Day tab: http://shanegammon.com/portfolio/election-day-2010-statewide
+#########################################################################################################
 				<h4 class="title">Decision Day</h4>				
 				<div id="election-content">
 					<ol id="election-headlines">

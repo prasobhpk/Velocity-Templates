@@ -1,4 +1,8 @@
 #########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+##
+## A helper template (similar to a function) that produces a random numeric and/or alphabetic output.
+#########################################################################################################
 ## RJ - Random helper template
 #########################################################################################################
 ## Description

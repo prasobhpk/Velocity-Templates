@@ -1,7 +1,16 @@
+#########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+##
+## Statewide election template that provided updating voting results through AJAX for the 2010 election.
+## http://www.lvrj.com/templates/statewide-results.html
+## Example of Election Day tab: http://shanegammon.com/portfolio/election-day-2010-statewide
+#########################################################################################################
 #if(!$domainString || $domainString == "")##
 	#set($domainString = "http://${cms.envHost}$cms.domain")##
 #end
-#set($quote = $util.encode.unHTML("&quot;"))##
+#if(!$quote || $quote == "")##
+	#set($quote = $util.encode.unHTML("&quot;"))##
+#end
 #set($onStatewide = false)##
 #set($onLocal = false)##
 #set($county = false)##

@@ -1,4 +1,10 @@
 #########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+##
+## A setup template for the entire Las Vegas Review-Journal website. This setup template declares 
+## variables that are common to all pages. Creating setup templates helps keep most of the logic 
+## separate from the HTML code.
+#########################################################################################################
 ## RJ - Setup helper template
 #########################################################################################################
 ## Description

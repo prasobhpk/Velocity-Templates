@@ -1,10 +1,19 @@
-########################################################################################################
+#########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+##
+## This is the content type configuration template for the template framework of the Las Vegas 
+## Review-Journal. Each content type has its own configuration template that mimics the framework fields 
+## in the destionation/section area of the CMS GUI. The framework allows for quickly adding/removing 
+## module templates in specific containers without affecting the page as a whole.
+##
+## More about the template framework: http://shanegammon.com/portfolio/template-framework
+#########################################################################################################
 ## [Name of Content Type] Template Configuration
 ########################################################################################################
 ## Description
 ## This is the example template for Content Type configuration and should not be used in production. 
-## Please copy and configure the contents of this template and name the new template 
-## "RJ - [Content Type]" with the Folder assignment of "RJ - Layout Templates".
+## Please copy and configure the contents of this template and rename the new template with the content 
+## type name, example "RJ - News Story".
 ##
 ## To configure an item, uncomment the variable declaration and add the requested information.
 ########################################################################################################

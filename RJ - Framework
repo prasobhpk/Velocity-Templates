@@ -1,4 +1,13 @@
-########################################################################################################
+#########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+##
+## This is the base template for the template framework used on all pages of the Las Vegas Review-Journal.
+## Through the destionation/section area of the CMS GUI and the content type templates, the framework 
+## allows for quickly adding/removing module templates in specific containers without affecting the page 
+## as a whole.
+##
+## More about the template framework: http://shanegammon.com/portfolio/template-framework
+#########################################################################################################
 ## RJ - Framework
 ########################################################################################################
 ## Base of the template framework for the Review-Journal website.
@@ -8,11 +17,7 @@
 ## Do not add Setup template if content item, the template will be added in the content type template. 
 ##
 #if(!$cms.content)##
-#if($cms.domain == "www.nevadapreps.com")
-$string.trim($cms.template("NP - Setup - framework"))##
-#else
 $string.trim($cms.template("RJ - Setup"))##
-#end
 #end
 ##
 #if($setupTemplates && !$setupTemplates.isEmpty())##
@@ -28,19 +33,11 @@ $string.trim($cms.template($setup))##
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:og="http://ogp.me/ns#" xmlns:fb="http://www.facebook.com/2008/fbml">
 <head>
-#if($cms.domain == "www.nevadapreps.com")
-$string.trim($cms.template("NP - Header"))##
-#else
 $string.trim($cms.template("RJ - Header"))
-#end
 </head>
 <body class="$string.toLowerCase($util.date("EEEE", $curDate, "America/Los_Angeles"))">
 <div id="fb-root"></div>
-#if($cms.domain == "www.nevadapreps.com")
-<script type="text/javascript" src="${cms.include('facebook-sdk-np.js').url}"></script>
-#else
 <script type="text/javascript" src="${cms.include('facebook-sdk.js').url}"></script>
-#end
 $string.trim($cms.template("Tracker"))##
 
 <div id="page"#if($frameworkDevClass)${frameworkDevClass}#end><div id="page-inner">

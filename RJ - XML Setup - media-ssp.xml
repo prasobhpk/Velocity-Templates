@@ -1,4 +1,11 @@
-########################################################################################################
+#########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+##
+## A setup template for the media-ssp.xml used by slideshow and video players on the Las Vegas 
+## Review-Journal website. This setup template declares the content variables and ArrayLists that are 
+## needed for local video and slideshows. Creating setup templates helps keep most of the logic separate 
+## from the HTML code.
+#########################################################################################################
 ## Setup template for media-ssp.xml 
 ########################################################################################################
 ## Description

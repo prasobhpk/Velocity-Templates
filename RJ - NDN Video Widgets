@@ -1,7 +1,19 @@
-########################################################################################################
+#########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+##
+## This is an example of a module template used on pages of the Las Vegas Review-Journal. Two types of 
+## video widgets needed to be developed instead of using the widgets provided by NDN. We used JavaScript 
+## widget instead of a Flash widget for better SEO and page load. This would allow the video to be loaded 
+## within our website for increased pageviews and the ability to serve ads. The option to mix local video 
+## and slideshow content was also built into the widget, removing the need for two separate widgets.
+##
+## More about the template framework: http://shanegammon.com/portfolio/template-framework
+#########################################################################################################
 ## RJ - NDN Video Widgets
-########################################################################################################
-## This module creates widgets for NDN video. There are two options: "Top Picks Launcher" and "Thumbnail Launcher"
+#########################################################################################################
+## This module creates widgets for NDN video with the option to mix local content.
+## There are two options: "Top Picks Launcher" and "Thumbnail Launcher"
+##
 ## External variables that need to be declared prior to template:
 ## $domainString (required) - Current domain string declared in the RJ - Setup template.
 ## $xmlURL (required) - XML URL of the NDN video feed. Must be MRSS 2.0
@@ -23,7 +35,7 @@ Debug:<br />
 \$numResults - $numResults<br />
 \$widgetType - $widgetType<br />
 *#
-########################################################################################################
+#########################################################################################################
 ##
 #set($ndnTracking = false)##
 #if(($domainString && $domainString != "") && ($xmlURL && $xmlURL != "") && ($numResults && $math.newInt($numResults) > 0) && ($widgetType && $widgetType != ""))##

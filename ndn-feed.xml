@@ -1,3 +1,8 @@
+#########################################################################################################
+## Example of a Velocity template used for the Las Vegas Review-Journal
+##
+## MRSS feed of video to be syndicated to NDN (News Distribution Network, Inc.)
+## http://www.lvrj.com/multimedia/syndication/ndn/publish/feed.xml
 ########################################################################################################
 ## ndn-feed.xml - XML feed to publish videos to NDN
 ########################################################################################################
